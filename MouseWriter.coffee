@@ -1,5 +1,7 @@
 exec = require('child_process').exec
 
+Log = require './Log'
+
 class MouseWriter
 
 	constructor: (@socket) ->
@@ -10,6 +12,7 @@ class MouseWriter
 		exec "xte -x :0.0 '" + order + " " + args + "'"
 
 	MoveTo: (pos) ->
+		Log.Log 'MoveTo', pos
 		@_Xte 'mousemove', pos.x + ' ' + pos.y
 
 	MoveRelativeTo: (pos) ->

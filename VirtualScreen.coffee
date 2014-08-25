@@ -28,21 +28,24 @@ class VirtualScreen
 			@mouseWrite = new MouseWriter
 			@mouseWrite.MoveTo @cursorPos
 
-		# Used to get mouse actions
-		@mouseRead = new MouseReader
+			# Used to get mouse actions
+			@mouseRead = new MouseReader
 
-		@mouseRead.on 'moved', (infos) =>
-			if infos.xOverflow or infos.yOverflow
-				@mouseWrite.MoveTo @cursorPos
+			@mouseRead.on 'moved', (infos) =>
+				if infos.xOverflow or infos.yOverflow
+					@mouseWrite.MoveTo @cursorPos
 
-			@cursorPos.x += infos.xDelta
-			@cursorPos.y -= infos.yDelta
+				@cursorPos.x += infos.xDelta
+				@cursorPos.y -= infos.yDelta
 
-			Log.Log @cursorPos
-			bus.emit 'mouseAction', infos
+				if Math.abs(infos.xDelta) > 3 or Math.abs(infos.yDelta) > 3
+					@mouseWrite.MoveTo @cursorPos
 
-		@mouseRead.on 'button', (infos) =>
-			bus.emit 'mouseAction', infos
+				Log.Log @cursorPos
+				bus.emit 'mouseAction', infos
+
+			@mouseRead.on 'button', (infos) =>
+				bus.emit 'mouseAction', infos
 
 	AddScreen: (@socket) ->
 	  @socket.once 'screenInfos', (infos) =>
