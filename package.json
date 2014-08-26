@@ -1,0 +1,18 @@
+{
+  "name": "symbiose",
+  "version": "0.0.1",
+  "dependencies": {
+    "settings": "*",
+    "coffee-script": "*",
+    "jade": "*",
+    "async": "*",
+    "underscore": "*",
+    "socket.io": "*",
+    "socket.io-client": "*",
+    "x11": "*",
+    "mocha": "*",
+    "assert": "*",
+    "superagent": "*",
+    "supertest": "*"
+  }
+}
