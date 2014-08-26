@@ -1,2 +1,10 @@
-div
-	| Hello {{lol}}
+div(ng-show="visible")
+	h1 First visit !
+
+	div
+		| Choose what configuration you want
+
+	div
+		button(ng-click="applyConfig('server')") Server
+	div
+		button(ng-click="applyConfig('client')") Client

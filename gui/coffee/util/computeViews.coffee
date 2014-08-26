@@ -30,7 +30,6 @@ appendViews = (files, done) ->
 		async.each files, appendFile
 		done()
 
-
 getViews (err, files) ->
 	return console.error err if err?
 

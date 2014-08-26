@@ -1,3 +1,5 @@
+config = @config
+
 @symbiose.directive 'symFirst', [
 	() ->
 
@@ -11,8 +13,13 @@
 
 			link: (scope, elem, attr) ->
 
-				console.log 'lol'
-				scope.lol = 'coucou'
+				scope.visible = !config.Exists()
+				console.log config, config.Exists()
+				scope.applyConfig = (mode) ->
+					config.Create()
+					config.mode = mode
+					config.Write()
+					scope.visible = false
 
 		}
 ]
