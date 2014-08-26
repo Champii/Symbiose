@@ -8,7 +8,7 @@ MouseWriter = require './MouseWriter'
 
 class VirtualScreen
 
-	constructor: ->
+	constructor: (@socket) ->
 
 		@screens = []
 		@cursorPos =
@@ -32,9 +32,6 @@ class VirtualScreen
 			@mouseRead = new MouseReader
 
 			@mouseRead.on 'moved', (infos) =>
-				if infos.xOverflow or infos.yOverflow
-					@mouseWrite.MoveTo @cursorPos
-
 				@cursorPos.x += infos.xDelta
 				@cursorPos.y -= infos.yDelta
 
@@ -42,14 +39,17 @@ class VirtualScreen
 					@mouseWrite.MoveTo @cursorPos
 
 				Log.Log @cursorPos
-				bus.emit 'mouseAction', infos
+				@socket.emit 'mousePos', @cursorPos
 
 			@mouseRead.on 'button', (infos) =>
-				bus.emit 'mouseAction', infos
+				bus.emit 'mouseButton', infos
 
 	AddScreen: (@socket) ->
 	  @socket.once 'screenInfos', (infos) =>
 		  @screens.push = infos
+
+		  @socket.emit 'initialCursorPos', @cursorPos
+
 		  Log.Log 'New screen added: ', infos
 
 	  @socket.emit 'askScreenInfos'

@@ -9,17 +9,18 @@ class Server
 	constructor: ->
 		@socket = null
 
-		@virtScreen = new VirtualScreen
 
 		io.sockets.on 'connection', (socket) =>
 			@socket = socket
 
+			@virtScreen = new VirtualScreen @socket
+
 			@virtScreen.AddScreen @socket
 
-			bus.on 'mouseAction', (infos) => @Send infos
+			bus.on 'mousePos', (pos) =>
+				@Send 'mousePos', pos
 
-	Send: (mouseInfos) ->
-		# if @socket?
-			@socket.emit 'mouseAction', mouseInfos
+	Send: (action, message) ->
+		@socket.emit action, message
 
 new Server

@@ -18,5 +18,7 @@ class Log
 	Log: ->
 		console.log.apply console, arguments if @level >= 3
 
+	SetLevel: (@level) ->
+
 module.exports = new Log 3
 

@@ -4,9 +4,7 @@ Log = require './Log'
 
 class MouseWriter
 
-	constructor: (@socket) ->
-		if @socket?
-			@socket.on 'mousemove', @MoveRelativeTo
+	constructor: ->
 
 	_Xte: (order, args) ->
 		exec "xte -x :0.0 '" + order + " " + args + "'"
@@ -16,7 +14,7 @@ class MouseWriter
 		@_Xte 'mousemove', pos.x + ' ' + pos.y
 
 	MoveRelativeTo: (pos) ->
-		@_Xte 'mousermove', pos.xDelta + ' ' + pos.yDelta
+		@_Xte 'mousermove', pos.xDelta + ' ' + (-pos.yDelta)
 
 module.exports = MouseWriter
 

@@ -11,7 +11,7 @@
 fs = require 'fs'
 EventEmitter = require('events').EventEmitter
 
-parse = (mouse, buffer) ->
+parse = (buffer) ->
   event =
     leftBtn:    (buffer[0] & 1  ) > 0
     rightBtn:   (buffer[0] & 2  ) > 0
@@ -53,10 +53,10 @@ class MouseReader extends EventEmitter
     fs.read @fd, @buf, 0, 3, null, @OnRead
 
   OnRead: (bytesRead) ->
-    @StartRead() if @fd
-    event = parse @, @buf
+    event = parse @buf
     event.dev = @dev
     @emit event.type, event
+    @StartRead() if @fd
 
   Close: (callback) ->
     fs.close @fd, -> console.log @
