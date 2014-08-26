@@ -38,15 +38,21 @@ class VirtualScreen
 				if Math.abs(infos.xDelta) > 3 or Math.abs(infos.yDelta) > 3
 					@mouseWrite.MoveTo @cursorPos
 
+				if @cursorPos.y < 0
+					@socket.emit 'mousePos',
+						x: @cursorPos.x
+						y: @cursorPos.y + @screens[1].height
+
+
+
 				Log.Log @cursorPos
-				@socket.emit 'mousePos', @cursorPos
 
 			@mouseRead.on 'button', (infos) =>
 				bus.emit 'mouseButton', infos
 
 	AddScreen: (@socket) ->
 	  @socket.once 'screenInfos', (infos) =>
-		  @screens.push = infos
+		  @screens.push infos
 
 		  @socket.emit 'initialCursorPos', @cursorPos
 
