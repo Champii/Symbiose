@@ -4,7 +4,7 @@ var client;
 client = null;
 
 this.symbiose.directive('symClient', [
-  '$rootScope', 'config', function($rootScope, config) {
+  '$rootScope', 'config', 'trayMenu', 'windowMenuService', function($rootScope, config, trayMenu, windowMenuService) {
     return {
       restrict: 'E',
       replace: true,
@@ -17,6 +17,16 @@ this.symbiose.directive('symClient', [
             return scope.config = config;
           });
         });
+        $rootScope.$on('start', function() {
+          return scope.$apply(function() {
+            return scope.startClient();
+          });
+        });
+        $rootScope.$on('stop', function() {
+          return scope.$apply(function() {
+            return scope.stopClient();
+          });
+        });
         scope.saveConfig = function() {
           return config.Write();
         };
@@ -25,12 +35,16 @@ this.symbiose.directive('symClient', [
           scope.saveConfig();
           Client = require('../client/compiled/Client');
           client = new Client;
-          return scope.started = true;
+          scope.started = true;
+          trayMenu.startButton.enabled = false;
+          return trayMenu.stopButton.enabled = true;
         };
         return scope.stopClient = function() {
           client.Stop();
           client = null;
-          return scope.started = false;
+          scope.started = false;
+          trayMenu.startButton.enabled = true;
+          return trayMenu.stopButton.enabled = false;
         };
       }
     };

@@ -62,7 +62,6 @@ config = ($rootScope) ->
 	for k, v of conf
 		@[k] = v
 
-
 	@
 
 if @symbiose?

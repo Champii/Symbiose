@@ -3,7 +3,9 @@ client = null
 @symbiose.directive 'symClient', [
 	'$rootScope'
 	'config'
-	($rootScope, config) ->
+	'trayMenu'
+	'windowMenuService'
+	($rootScope, config, trayMenu, windowMenuService) ->
 
 		return {
 
@@ -22,6 +24,13 @@ client = null
 					scope.$apply ->
 						scope.config = config
 
+				$rootScope.$on 'start', ->
+					scope.$apply ->
+						scope.startClient()
+				$rootScope.$on 'stop', ->
+					scope.$apply ->
+						scope.stopClient()
+
 				scope.saveConfig = ->
 					config.Write()
 
@@ -33,6 +42,8 @@ client = null
 					client = new Client
 
 					scope.started = true
+					trayMenu.startButton.enabled = false
+					trayMenu.stopButton.enabled = true
 
 				scope.stopClient = ->
 					client.Stop()
@@ -40,6 +51,9 @@ client = null
 					client = null
 
 					scope.started = false
+
+					trayMenu.startButton.enabled = true
+					trayMenu.stopButton.enabled = false
 
 		}
 ]

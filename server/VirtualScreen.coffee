@@ -6,10 +6,6 @@ Log = require '../../common/compiled/Log'
 MouseReader = require '../../common/compiled/MouseReader'
 MouseWriter = require '../../common/compiled/MouseWriter'
 
-Keyboard = require('node-keyboard/keyboard');
-
-console.log 'keyboard', Keyboard
-
 class VirtualScreen
 
 	constructor: ->
@@ -55,14 +51,14 @@ class VirtualScreen
 		@cursorPos.y -= infos.yDelta
 
 		if @cursorPos.y < 0 and @socket?
-			@SwitchInput() if !@switchedInput
+			@_SwitchInput() if !@switchedInput
 
 			@mouseWrite.MoveTo {x: 1000, y: 1000}
 			@socket.emit 'mousePos',
 				x: @cursorPos.x
 				y: @cursorPos.y + @screens[1].height
 		else
-			@SwitchInput() if @switchedInput
+			@_SwitchInput() if @switchedInput
 			if Math.abs(infos.xDelta) > 3 or Math.abs(infos.yDelta) > 3
 				@mouseWrite.MoveTo @cursorPos
 
