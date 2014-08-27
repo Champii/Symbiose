@@ -10,3 +10,5 @@ div(ng-if="config.mode == 'client'")
 
 	div
 		button(ng-click="saveConfig()") Save
+		button(ng-click="startClient()", ng-show="!started") Start
+		button(ng-click="stopClient()", ng-show="started") Stop

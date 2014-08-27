@@ -1,6 +1,7 @@
 @symbiose.directive 'symFirst', [
+	'$rootScope'
 	'config'
-	(config) ->
+	($rootScope, config) ->
 
 		return {
 
@@ -12,11 +13,14 @@
 
 			link: (scope, elem, attr) ->
 
+				scope.config = config
+
 				scope.applyConfig = (mode) ->
-					console.log 'Mode', mode
-					config.SetMode mode
-					# config.mode = mode
 					config.Write()
+
+				$rootScope.$on 'config_reset', (e, config) ->
+					scope.$apply ->
+						scope.config = config
 
 		}
 ]

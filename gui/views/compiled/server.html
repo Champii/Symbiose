@@ -1,1 +1,1 @@
-<div ng-if="config.mode == 'server'"><h1>Server</h1><div><label for="port">Port</label><input type="text" id="port" ng-model="config.port"/></div><div><button ng-click="saveConfig()">Save</button></div></div>
+<div ng-if="config.mode == 'server'"><h1>Server</h1><div><label for="port">Port</label><input type="text" id="port" ng-model="config.port"/></div><div><button ng-click="saveConfig()">Save</button><button ng-click="startServer()" ng-show="!started">Start</button><button ng-click="stopServer()" ng-show="started">Stop</button></div></div>

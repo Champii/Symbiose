@@ -7,3 +7,5 @@ div(ng-if="config.mode == 'server'")
 
 	div
 		button(ng-click="saveConfig()") Save
+		button(ng-click="startServer()", ng-show="!started") Start
+		button(ng-click="stopServer()", ng-show="started") Stop

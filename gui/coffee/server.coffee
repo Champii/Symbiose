@@ -1,6 +1,9 @@
+server = null
+
 @symbiose.directive 'symServer', [
+	'$rootScope'
 	'config'
-	(config) ->
+	($rootScope, config) ->
 
 		return {
 
@@ -13,9 +16,31 @@
 			link: (scope, elem, attr) ->
 
 				scope.config = config
+				scope.started = false
+
+				$rootScope.$on 'config_reset', (e, config) ->
+					scope.$apply ->
+						scope.config = config
 
 				scope.saveConfig = ->
 					config.Write()
+
+				scope.start = ->
+
+					scope.saveConfig()
+
+					Server = require '../server/compiled/Server'
+
+					server = new Server
+
+					scope.started = true
+
+				scope.stop = ->
+					server.Stop()
+
+					server = null
+
+					scope.started = false
 
 		}
 ]

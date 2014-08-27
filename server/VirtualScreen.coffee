@@ -1,10 +1,10 @@
 x11 = require 'x11'
 
-bus = require '../common/Bus'
-Log = require '../common/Log'
+bus = require '../../common/compiled/Bus'
+Log = require '../../common/compiled/Log'
 
-MouseReader = require './common/MouseReader'
-MouseWriter = require './common/MouseWriter'
+MouseReader = require '../../common/compiled/MouseReader'
+MouseWriter = require '../../common/compiled/MouseWriter'
 
 class VirtualScreen
 
@@ -59,5 +59,9 @@ class VirtualScreen
 		  Log.Log 'New screen added: ', infos
 
 	  @socket.emit 'askScreenInfos'
+
+	Destroy: ->
+		@mouseRead.Close()
+
 
 module.exports = VirtualScreen

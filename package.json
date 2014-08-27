@@ -1,6 +1,22 @@
 {
   "name": "symbiose",
+  "main": "gui/index.html",
   "version": "0.0.1",
+  "window": {
+    "title": "Symbiose",
+    "toolbar": true,
+    "frame": true,
+    "width": 800,
+    "height": 500,
+    "position": "mouse",
+    "min_width": 400,
+    "min_height": 200,
+    "max_width": 800,
+    "max_height": 600
+  },
+  "webkit": {
+    "plugin": true
+  },
   "dependencies": {
     "settings": "*",
     "coffee-script": "*",

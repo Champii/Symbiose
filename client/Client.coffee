@@ -1,12 +1,16 @@
 x11 = require 'x11'
 io = require('socket.io-client')
 
-MouseWriter = require './common/MouseWriter'
-Log = require '../common/Log'
+MouseWriter = require '../../common/compiled/MouseWriter'
+Log = require '../../common/compiled/Log'
+
+Config = require '../../gui/js/compiled/util/config'
+
+config = new Config
 
 class Client
 
-	constructor: (host, port) ->
+	constructor: ->
 
 		x11.createClient (err, display) =>
 		  return Log.Error err if err?
@@ -17,7 +21,7 @@ class Client
 
 		  Log.Warning @screen
 
-			@socket = io 'http://' + host + ':' + port
+			@socket = io 'http://' + config.host + ':' + config.port
 
 			@socket.on 'askScreenInfos', =>
 				@socket.emit 'screenInfos', @screen
@@ -32,16 +36,9 @@ class Client
 				Log.Log 'mouse pos', pos
 				@mouseWrite.MoveTo pos
 
-host = 'localhost'
-port = 4242
-
-if process.argv[2]?
-	host = process.argv[2]
-if process.argv[3]?
-	port = process.argv[3]
-
-Log.Log 'Connection to', host, port
+	Stop: ->
+		@socket = null
 
 Log.SetLevel 2
 
-new Client host, port
+module.exports = exports = Client
