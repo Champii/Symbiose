@@ -1,0 +1,12 @@
+div(ng-if="config.mode == 'client'")
+	h1 Client
+
+	div
+		label(for="host") Host
+		input(type="text", id="host", ng-model="config.host")
+	div
+		label(for="port") Port
+		input(type="text", id="port", ng-model="config.port")
+
+	div
+		button(ng-click="saveConfig()") Save

@@ -1,0 +1,9 @@
+div(ng-if="config.mode == 'server'")
+	h1 Server
+
+	div
+		label(for="port") Port
+		input(type="text", id="port", ng-model="config.port")
+
+	div
+		button(ng-click="saveConfig()") Save

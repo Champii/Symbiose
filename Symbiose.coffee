@@ -8,6 +8,4 @@ class Symbiose
 	Run: ->
 		exec './common/nodewebkit/nw ./gui'
 
-
-
 app = new Symbiose

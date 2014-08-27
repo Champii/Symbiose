@@ -1,44 +1,54 @@
 fs = require 'fs'
 
-class Config
+@symbiose.service 'config', [
+	'$rootScope'
+	($rootScope) ->
 
-	constructor: ->
 		@path = '../config/'
 		@filename = 'config'
-		# fs.readdir '.', (err, filenames) ->
-		# 	return console.error err if err?
+		@mode = null
 
-		# 	console.log filenames
+		@Open = (mode) ->
+			@fd = fs.openSync @path + @filename, mode
 
-	Open: (mode) ->
-		@fd = fs.openSync @path + @filename, mode
+		@Close = ->
+			fs.closeSync @fd
 
-	Close: ->
-		fs.closeSync @fd
+		@Create = ->
+			@Open 'a'
+			@Close()
+			@Write()
 
-	Create: ->
-		@Open 'a'
-		@Close()
+		@Parse = ->
+			test = JSON.parse fs.readFileSync @path + @filename, encoding: 'UTF8'
 
-	Parse: ->
-		test = JSON.parse fs.readFileSync @path + @filename, encoding: 'UTF8'
+			console.log 'parse', test
+			for k, v of test
+				@[k] = v
 
-		console.log 'parse', test
-		for k, v of test
-			@[k] = v
+		@Write = ->
+			console.log @
+			obj = {}
+			for k, v of @ when k isnt 'path' and k isnt 'filename' and k isnt 'fd' and typeof v isnt 'function'
+				obj[k] = v
 
-	Write: ->
-		obj = {}
-		for k, v of @ when k isnt 'path' and k isnt 'filename' and k isnt 'fd'
-			obj[k] = v
+			console.log 'write', obj
+			fs.writeFileSync @path + @filename, JSON.stringify(obj), encoding: 'UTF8'
 
-		console.log 'write', obj
-		fs.writeFileSync @path + @filename, JSON.stringify(obj), encoding: 'UTF8'
+		@Exists = ->
+			console.log 'lol'
+			fs.existsSync @path + @filename
 
-	Exists: ->
-		fs.existsSync @path + @filename
+		if @Exists()
+			console.log 'Exists !'
+			@Parse()
+		else
+			console.log 'Create !'
+			@Create()
 
-	_DefaultConfig: ->
-		mode: null
+		@SetMode = (@mode) ->
 
-@config = new Config
+		@
+
+]
+

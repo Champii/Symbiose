@@ -1,25 +1,22 @@
-config = @config
-
 @symbiose.directive 'symFirst', [
-	() ->
+	'config'
+	(config) ->
 
 		return {
 
 			restrict: 'E'
 
-			replace: false
+			replace: true
 
 			templateUrl: 'views/compiled/first.html'
 
 			link: (scope, elem, attr) ->
 
-				scope.visible = !config.Exists()
-				console.log config, config.Exists()
 				scope.applyConfig = (mode) ->
-					config.Create()
-					config.mode = mode
+					console.log 'Mode', mode
+					config.SetMode mode
+					# config.mode = mode
 					config.Write()
-					scope.visible = false
 
 		}
 ]
