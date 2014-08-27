@@ -20,14 +20,14 @@ this.symbiose.directive('symServer', [
         scope.saveConfig = function() {
           return config.Write();
         };
-        scope.start = function() {
+        scope.startServer = function() {
           var Server;
           scope.saveConfig();
           Server = require('../server/compiled/Server');
           server = new Server;
           return scope.started = true;
         };
-        return scope.stop = function() {
+        return scope.stopServer = function() {
           server.Stop();
           server = null;
           return scope.started = false;

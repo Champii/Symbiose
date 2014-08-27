@@ -19,8 +19,14 @@ Server = (function() {
       return function(socket) {
         _this.socket = socket;
         _this.virtScreen.AddScreen(_this.socket);
-        return bus.on('mousePos', function(pos) {
+        bus.on('mousePos', function(pos) {
           return _this.Send('mousePos', pos);
+        });
+        bus.on('buttonDown', function(button) {
+          return _this.Send('buttonDown', button);
+        });
+        return bus.on('buttonUp', function(button) {
+          return _this.Send('buttonUp', button);
         });
       };
     })(this));

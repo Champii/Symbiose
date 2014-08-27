@@ -23,6 +23,12 @@ class Server
 			bus.on 'mousePos', (pos) =>
 				@Send 'mousePos', pos
 
+			bus.on 'buttonDown', (button) =>
+				@Send 'buttonDown', button
+
+			bus.on 'buttonUp', (button) =>
+				@Send 'buttonUp', button
+
 
 	Send: (action, message) ->
 		@socket.emit action, message

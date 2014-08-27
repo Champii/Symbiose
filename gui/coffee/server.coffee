@@ -25,7 +25,7 @@ server = null
 				scope.saveConfig = ->
 					config.Write()
 
-				scope.start = ->
+				scope.startServer = ->
 
 					scope.saveConfig()
 
@@ -35,7 +35,7 @@ server = null
 
 					scope.started = true
 
-				scope.stop = ->
+				scope.stopServer = ->
 					server.Stop()
 
 					server = null

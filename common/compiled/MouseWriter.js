@@ -13,12 +13,19 @@ MouseWriter = (function() {
   };
 
   MouseWriter.prototype.MoveTo = function(pos) {
-    Log.Log('MoveTo', pos);
     return this._Xte('mousemove', pos.x + ' ' + pos.y);
   };
 
   MouseWriter.prototype.MoveRelativeTo = function(pos) {
     return this._Xte('mousermove', pos.xDelta + ' ' + (-pos.yDelta));
+  };
+
+  MouseWriter.prototype.ButtonDown = function(button) {
+    return this._Xte('mousedown', button);
+  };
+
+  MouseWriter.prototype.ButtonUp = function(button) {
+    return this._Xte('mouseup', button);
   };
 
   return MouseWriter;

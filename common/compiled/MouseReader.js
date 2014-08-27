@@ -9,13 +9,15 @@
  * http://nodebits.org/linux-joystick
  * https://github.com/nodebits/linux-joystick
  */
-var EventEmitter, MouseReader, fs, parse,
+var EventEmitter, MouseReader, down, fs, parse,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 fs = require('fs');
 
 EventEmitter = require('events').EventEmitter;
+
+down = 0;
 
 parse = function(buffer) {
   var event;
@@ -30,8 +32,22 @@ parse = function(buffer) {
     xDelta: buffer.readInt8(1),
     yDelta: buffer.readInt8(2)
   };
-  if (event.leftBtn || event.rightBtn || event.middleBtn) {
-    event.type = 'button';
+  if ((event.leftBtn || event.rightBtn || event.middleBtn) && !down) {
+    event.type = 'buttonDown';
+    if (event.leftBtn) {
+      event.button = 1;
+    }
+    if (event.rightBtn) {
+      event.button = 3;
+    }
+    if (event.middleBtn) {
+      event.button = 2;
+    }
+    down = event.button;
+  } else if (!event.leftBtn && !event.rightBtn && !event.middleBtn && down) {
+    event.type = 'buttonUp';
+    event.button = down;
+    down = 0;
   } else {
     event.type = 'moved';
   }

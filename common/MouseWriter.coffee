@@ -10,11 +10,19 @@ class MouseWriter
 		exec "xte -x :0.0 '" + order + " " + args + "'"
 
 	MoveTo: (pos) ->
-		Log.Log 'MoveTo', pos
+		# Log.Log 'MoveTo', pos
 		@_Xte 'mousemove', pos.x + ' ' + pos.y
 
 	MoveRelativeTo: (pos) ->
 		@_Xte 'mousermove', pos.xDelta + ' ' + (-pos.yDelta)
+
+	ButtonDown: (button) ->
+		@_Xte 'mousedown', button
+
+	ButtonUp: (button) ->
+		@_Xte 'mouseup', button
+
+	KeyDown: ()
 
 module.exports = MouseWriter
 

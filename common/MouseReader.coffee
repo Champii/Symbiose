@@ -11,6 +11,8 @@
 fs = require 'fs'
 EventEmitter = require('events').EventEmitter
 
+down = 0
+
 parse = (buffer) ->
   event =
     leftBtn:    (buffer[0] & 1  ) > 0
@@ -23,8 +25,16 @@ parse = (buffer) ->
     xDelta:      buffer.readInt8(1)
     yDelta:      buffer.readInt8(2)
 
-  if (event.leftBtn || event.rightBtn || event.middleBtn)
-    event.type = 'button'
+  if (event.leftBtn || event.rightBtn || event.middleBtn) && !down
+    event.type = 'buttonDown'
+    event.button = 1 if event.leftBtn
+    event.button = 3 if event.rightBtn
+    event.button = 2 if event.middleBtn
+    down = event.button
+  else if !event.leftBtn && !event.rightBtn && !event.middleBtn && down
+    event.type = 'buttonUp'
+    event.button = down
+    down = 0
   else
     event.type = 'moved'
 

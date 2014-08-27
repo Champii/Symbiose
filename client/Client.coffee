@@ -11,6 +11,7 @@ config = new Config
 class Client
 
 	constructor: ->
+		Log.SetLevel 2
 
 		x11.createClient (err, display) =>
 		  return Log.Error err if err?
@@ -36,9 +37,14 @@ class Client
 				Log.Log 'mouse pos', pos
 				@mouseWrite.MoveTo pos
 
+			@socket.on 'buttonDown', (i) =>
+				@mouseWrite.ButtonDown i
+
+			@socket.on 'buttonUp', (i) =>
+				@mouseWrite.ButtonUp i
+
 	Stop: ->
 		@socket = null
 
-Log.SetLevel 2
 
 module.exports = exports = Client

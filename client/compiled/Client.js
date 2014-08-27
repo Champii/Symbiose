@@ -15,6 +15,7 @@ config = new Config;
 
 Client = (function() {
   function Client() {
+    Log.SetLevel(2);
     x11.createClient((function(_this) {
       return function(err, display) {
         if (err != null) {
@@ -46,6 +47,16 @@ Client = (function() {
         return _this.mouseWrite.MoveTo(pos);
       };
     })(this));
+    this.socket.on('buttonDown', (function(_this) {
+      return function(i) {
+        return _this.mouseWrite.ButtonDown(i);
+      };
+    })(this));
+    this.socket.on('buttonUp', (function(_this) {
+      return function(i) {
+        return _this.mouseWrite.ButtonUp(i);
+      };
+    })(this));
   }
 
   Client.prototype.Stop = function() {
@@ -55,7 +66,5 @@ Client = (function() {
   return Client;
 
 })();
-
-Log.SetLevel(2);
 
 module.exports = exports = Client;
