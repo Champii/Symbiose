@@ -31,6 +31,7 @@ class Server
 
 
 	Send: (action, message) ->
+		console.log 'Send', action, message
 		@socket.emit action, message
 
 	Stop: ->

@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "window": {
     "title": "Symbiose",
-    "toolbar": false,
+    "toolbar": true,
     "frame": true,
     "width": 800,
     "height": 500,

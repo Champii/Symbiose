@@ -28,6 +28,8 @@ MouseWriter = (function() {
     return this._Xte('mouseup', button);
   };
 
+  MouseWriter.prototype.KeyDown = function() {};
+
   return MouseWriter;
 
 })();

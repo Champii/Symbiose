@@ -1,11 +1,26 @@
 exec = require('child_process').exec
 
+Server = require './server/compiled/Server'
+Client = require './client/compiled/Client'
+
 class Symbiose
 
 	constructor: ->
-		@Run()
 
 	Run: ->
-		exec './common/nodewebkit/nw ./gui'
+		exec '../nodewebkit/nw .'
+
+	RunServerCli: ->
+	  @server = new Server
+
+	RunClientCli: ->
+	  @client = new Client
 
 app = new Symbiose
+
+if process.argv[2] is '-q' and process.argv[3] is '-s'
+	app.RunServerCli()
+else if process.argv[2] is '-q' and process.argv[3] is '-c'
+	app.RunClientCli()
+else
+	app.Run()

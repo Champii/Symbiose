@@ -22,7 +22,7 @@ class MouseWriter
 	ButtonUp: (button) ->
 		@_Xte 'mouseup', button
 
-	KeyDown: ()
+	KeyDown: () ->
 
 module.exports = MouseWriter
 

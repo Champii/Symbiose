@@ -1,8 +1,8 @@
 x11 = require 'x11'
 io = require('socket.io-client')
 
-MouseWriter = require '../../common/compiled/MouseWriter'
 Log = require '../../common/compiled/Log'
+MouseWriter = require '../../common/compiled/MouseWriter'
 
 Config = require '../../gui/js/compiled/util/config'
 
@@ -11,7 +11,7 @@ config = new Config
 class Client
 
 	constructor: ->
-		Log.SetLevel 2
+		Log.SetLevel 3
 
 		x11.createClient (err, display) =>
 		  return Log.Error err if err?

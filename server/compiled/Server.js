@@ -33,6 +33,7 @@ Server = (function() {
   }
 
   Server.prototype.Send = function(action, message) {
+    console.log('Send', action, message);
     return this.socket.emit(action, message);
   };
 
