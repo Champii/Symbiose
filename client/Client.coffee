@@ -11,7 +11,7 @@ config = new Config
 class Client
 
 	constructor: ->
-		Log.SetLevel 3
+		Log.SetLevel 2
 
 		x11.createClient (err, display) =>
 		  return Log.Error err if err?

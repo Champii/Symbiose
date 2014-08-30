@@ -26,7 +26,6 @@ VirtualScreen = (function() {
     })(this));
     this.X.on('mousePos', (function(_this) {
       return function(pos) {
-        console.log('lol', pos);
         _this.cursorPos = pos;
         if ((!_this.switchedOutput && _this.cursorPos.y <= 0) || (_this.switchedOutput && _this.cursorPos.y >= _this.screens[1].height - 1)) {
           _this._SwitchOutput();
@@ -36,25 +35,38 @@ VirtualScreen = (function() {
         }
       };
     })(this));
+    this.X.on('buttonDown', (function(_this) {
+      return function(i) {
+        if (_this.switchedOutput) {
+          return _this.socket.emit('buttonDown', i);
+        }
+      };
+    })(this));
+    this.X.on('buttonUp', (function(_this) {
+      return function(i) {
+        if (_this.switchedOutput) {
+          return _this.socket.emit('buttonUp', i);
+        }
+      };
+    })(this));
   }
 
   VirtualScreen.prototype._SwitchOutput = function() {
-    console.log('Switch !', this.screens);
+    console.log('Switch !');
     this.switchedOutput = !this.switchedOutput;
     if (this.switchedOutput) {
       this.cursorPos = {
         x: this.cursorPos.x,
-        y: this.screens[0].height - 1
+        y: this.screens[1].height - 2
       };
       this.X.StopPointerQuery();
-      this.X.CreateCaptureWindow(this.screens[1]);
-      this.X.MovePointer(this.cursorPos);
-      return this.X.Grab();
+      this.X.CreateCaptureWindow();
+      return this.X.MovePointer(this.cursorPos);
     } else {
       this.X.Ungrab();
       this.cursorPos = {
         x: this.cursorPos.x,
-        y: 0
+        y: 1
       };
       this.X.MovePointer(this.cursorPos);
       this.X.DestroyCaptureWindow();

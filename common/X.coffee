@@ -3,9 +3,11 @@ EventEmitter = require('events').EventEmitter
 
 Log = require './Log'
 
-# Exposure = x11.eventMask.Exposure
+Exposure = x11.eventMask.Exposure
 PointerMotion = x11.eventMask.PointerMotion
 ButtonPress = x11.eventMask.ButtonPress
+ButtonRelease = x11.eventMask.ButtonRelease
+StructureNotify = x11.eventMask.StructureNotify
 
 class X extends EventEmitter
 
@@ -22,43 +24,108 @@ class X extends EventEmitter
 
 			done()
 
+	InitEventTree: (root) ->
+		@X.QueryTree root, (err, tree) =>
+			return Log.Error err if err?
+
+			tree.children.forEach (wid) =>
+				@X.GetWindowAttributes wid, (err, attrs) =>
+					return Log.Error err if err?
+
+					@X.ChangeWindowAttributes wid,
+						eventMask: Exposure|StructureNotify
+
+					@InitEventTree wid
+
 	StartPointerQuery: ->
-	  @pointerTimer = setInterval =>
-	    @X.QueryPointer @root, (err, fields) =>
-	    	# console.log 'HOST mouse: ', {x: fields.rootX, y: fields.rootY}
-	    	@emit 'mousePos', {x: fields.rootX, y: fields.rootY}
-	  , 50
+		console.log @X
+		@pointerTimer = setInterval =>
+			@X.QueryPointer @root, (err, fields) =>
+				return Log.Error err if err?
+				# console.log 'HOST mouse: ', {x: fields.rootX, y: fields.rootY}
+				@emit 'mousePos', {x: fields.rootX, y: fields.rootY}
+		, 10
 
 	StopPointerQuery: ->
 		clearInterval @pointerTimer
 
-	CreateCaptureWindow: (screenSize) ->
+	CreateBlankCursor: ->
+		if not @cursorId?
+			cursorSourceId = @X.AllocID()
+
+			@X.CreatePixmap cursorSourceId,
+											@captureWid,
+											1,
+											1,
+											1
+
+			gc = @X.AllocID()
+			@X.CreateGC gc, cursorSourceId
+
+			@X.CopyArea @root,
+									cursorSourceId,
+									gc,
+									0,
+									0,
+									0,
+									0,
+									1,
+									1
+
+			color =
+				R: 0
+				G: 0
+				B: 0
+
+			@cursorId = @X.AllocID()
+
+			@X.CreateCursor @cursorId,
+											cursorSourceId,
+											0,
+											color,
+											color,
+											0,
+											0
+
+		return @cursorId
+
+	CreateCaptureWindow: ->
 		@captureWid = @X.AllocID()
 		@X.CreateWindow @captureWid,
 										@root,
-										@display.screen[0].pixel_width - 1,
-										@display.screen[0].pixel_height - 1,
-										screenSize.width,
-										screenSize.height,
 										0,
 										0,
-										1,
+										@display.screen[0].pixel_width,
+										@display.screen[0].pixel_height,
 										0,
-										{eventMask: PointerMotion|ButtonPress}
+										0,
+										2,
+										0,
+											eventMask: PointerMotion|ButtonPress|ButtonRelease
+
+		@X.ChangeWindowAttributes @captureWid,
+			cursor: @CreateBlankCursor()
 
 		@X.MapWindow @captureWid
-		gc = @X.AllocID()
-		@X.CreateGC gc, @captureWid
 
 		@X.on 'event', (ev) =>
-			if ev.name is 'MotionNotify' and ev.wid is @captureWid
-				console.log 'Client mouse !', ev
-				@emit 'mousePos', {x: ev.x, y: ev.y}
+			if ev.wid is @captureWid
+				if ev.name is 'MotionNotify'
+					@emit 'mousePos', {x: ev.x, y: ev.y}
+				if ev.name is 'ButtonPress'
+					console.log 'buttondown', ev.keycode
+					@emit 'buttonDown', ev.keycode
+				if ev.name is 'ButtonRelease'
+					console.log 'buttonup', ev.keycode
+					@emit 'buttonUp', ev.keycode
 
 		@X.on 'error', (e) ->
-		  Log.error e
+			Log.Error e
 
 	DestroyCaptureWindow: ->
+		@X.removeAllListeners 'event'
+		@X.DestroyWindow @captureWid
+		@captureWid = null
 
 	MovePointer: (pos) ->
 		target = @root

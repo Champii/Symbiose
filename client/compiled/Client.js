@@ -15,7 +15,7 @@ config = new Config;
 
 Client = (function() {
   function Client() {
-    Log.SetLevel(3);
+    Log.SetLevel(2);
     x11.createClient((function(_this) {
       return function(err, display) {
         if (err != null) {

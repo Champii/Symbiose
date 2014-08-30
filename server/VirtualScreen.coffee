@@ -20,8 +20,9 @@ class VirtualScreen
 
 			Log.Log 'Host screen', @screens[0]
 
+			# @X.InitEventTree @X.root
+
 		@X.on 'mousePos', (pos) =>
-			console.log 'lol', pos
 			@cursorPos = pos
 
 			if (!@switchedOutput and @cursorPos.y <= 0) or (@switchedOutput and @cursorPos.y >= @screens[1].height - 1)
@@ -30,40 +31,48 @@ class VirtualScreen
 			if @switchedOutput
 				@socket.emit 'mousePos', @cursorPos
 
+		@X.on 'buttonDown', (i) =>
+			if @switchedOutput
+				@socket.emit 'buttonDown', i
+
+		@X.on 'buttonUp', (i) =>
+			if @switchedOutput
+				@socket.emit 'buttonUp', i
+
 	_SwitchOutput: ->
-		console.log 'Switch !', @screens
+		console.log 'Switch !'
 
 		@switchedOutput = !@switchedOutput
 		if @switchedOutput
 			@cursorPos =
 				x: @cursorPos.x
-				y: @screens[0].height - 1
+				y: @screens[1].height - 2
 
 			@X.StopPointerQuery()
-			@X.CreateCaptureWindow @screens[1]
+			@X.CreateCaptureWindow()
+			# @X.Grab()
 			@X.MovePointer @cursorPos
-			@X.Grab()
 		else
 			@X.Ungrab()
 			@cursorPos =
 				x: @cursorPos.x
-				y: 0
+				y: 1
 
 			@X.MovePointer @cursorPos
 			@X.DestroyCaptureWindow()
 			@X.StartPointerQuery()
 
 	AddScreen: (@socket) ->
-	  @socket.once 'screenInfos', (infos) =>
-		  @screens.push infos
+		@socket.once 'screenInfos', (infos) =>
+			@screens.push infos
 
-		  # @socket.emit 'initialCursorPos', @cursorPos
+			# @socket.emit 'initialCursorPos', @cursorPos
 
-		  Log.Log 'New screen added: ', infos
+			Log.Log 'New screen added: ', infos
 
-		  @X.StartPointerQuery()
+			@X.StartPointerQuery()
 
-	  @socket.emit 'askScreenInfos'
+		@socket.emit 'askScreenInfos'
 
 	Destroy: ->
 		# @mouseRead.Close()
