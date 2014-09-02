@@ -14,7 +14,7 @@ npm install
 npm install -g coffee-script
 npm install -g jade
 ./compile.sh
-./common/nodewebkit/nw .        # Run with sudo for the server
+./common/nodewebkit/nw .
 ```
 
 ### Windows
@@ -34,8 +34,12 @@ Not working yet
 
 ## TODO
 
+By order of priority:
+
 * Catch keyboard events
-* Better mouse integration (its laggy and not precise)
+* Drag n Drop window between screens
+* Live update of windows
+* Hide source window when dragged out of screen
+* Catch guest windows inputs
 * Multi client
 * Choose where to place clients screens
-* Catch every window events

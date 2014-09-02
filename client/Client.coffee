@@ -1,10 +1,11 @@
-x11 = require 'x11'
 io = require('socket.io-client')
 
 Log = require '../../common/compiled/Log'
 MouseWriter = require '../../common/compiled/MouseWriter'
 
 Config = require '../../gui/js/compiled/util/config'
+
+X = require '../../common/compiled/X'
 
 config = new Config
 
@@ -13,12 +14,11 @@ class Client
 	constructor: ->
 		Log.SetLevel 2
 
-		x11.createClient (err, display) =>
-		  return Log.Error err if err?
-
-		  @screen =
-		  	width: display.screen[0].pixel_width
-		  	height: display.screen[0].pixel_height
+		@X = new X =>
+			console.log 'lol'
+			@screen =
+		  	width: @X.display.screen[0].pixel_width
+		  	height: @X.display.screen[0].pixel_height
 
 		  Log.Warning @screen
 
@@ -42,6 +42,16 @@ class Client
 
 			@socket.on 'buttonUp', (i) =>
 				@mouseWrite.ButtonUp i
+
+			@socket.on 'window', (win) =>
+				console.log 'Window info !'
+				@X.FillWindow win
+
+			@socket.on 'disconnect', ->
+				Log.Warning 'Disconnected'
+
+			@socket.on 'error', (err) ->
+				Log.Error err
 
 	Stop: ->
 		@socket = null

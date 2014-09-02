@@ -1,3 +1,5 @@
+_ = require 'underscore'
+
 bus = require '../../common/compiled/Bus'
 Log = require '../../common/compiled/Log'
 
@@ -20,7 +22,7 @@ class VirtualScreen
 
 			Log.Log 'Host screen', @screens[0]
 
-			# @X.InitEventTree @X.root
+			@X.InitEventTree @X.root
 
 		@X.on 'mousePos', (pos) =>
 			@cursorPos = pos
@@ -39,8 +41,15 @@ class VirtualScreen
 			if @switchedOutput
 				@socket.emit 'buttonUp', i
 
+		@X.on 'window', (win) =>
+			# if @switchedOutput
+			@socket.emit 'window', win
+
+		@X.on 'switchOutput', =>
+			@_SwitchOutput()
+
 	_SwitchOutput: ->
-		console.log 'Switch !'
+		console.log 'Switch !', @switchedOutput
 
 		@switchedOutput = !@switchedOutput
 		if @switchedOutput
@@ -48,21 +57,21 @@ class VirtualScreen
 				x: @cursorPos.x
 				y: @screens[1].height - 2
 
-			@X.StopPointerQuery()
 			@X.CreateCaptureWindow()
 			# @X.Grab()
 			@X.MovePointer @cursorPos
 		else
-			@X.Ungrab()
+			# @X.Ungrab()
+			@X.DestroyCaptureWindow()
+
 			@cursorPos =
 				x: @cursorPos.x
-				y: 1
+				y: 4
 
 			@X.MovePointer @cursorPos
-			@X.DestroyCaptureWindow()
-			@X.StartPointerQuery()
 
 	AddScreen: (@socket) ->
+		console.log 'AddScreen'
 		@socket.once 'screenInfos', (infos) =>
 			@screens.push infos
 
@@ -70,7 +79,7 @@ class VirtualScreen
 
 			Log.Log 'New screen added: ', infos
 
-			@X.StartPointerQuery()
+			# @X.StartPointerQuery()
 
 		@socket.emit 'askScreenInfos'
 
