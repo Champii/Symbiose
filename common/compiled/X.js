@@ -49,7 +49,6 @@ X = (function(_super) {
             console.log(ev);
           }
           if (ev.name === 'ConfigureNotify' && ev.y <= 0 && !_this.IsFullScreen(ev)) {
-            console.log('Configure : ', ev.x, ev.y);
             _this.SendNewWindow(ev);
           }
           if (ev.name === 'CreateNotify') {
@@ -176,9 +175,12 @@ X = (function(_super) {
   X.prototype.SendNewWindow = function(ev) {
     var timer, winId;
     this.emit('switchOutput');
-    console.log("SendNewWindow", ev);
+    console.log("SendNewWindow");
     winId = this.windowId++;
     if (!winId) {
+      this.X.ChangeWindowAttributes(ev.wid, {
+        backingStore: 2
+      });
       timer = setInterval((function(_this) {
         return function() {
           return _this.X.GetImage(2, ev.wid, 0, 0, ev.width, ev.height, 0xffffffff, function(err, res) {
@@ -189,7 +191,8 @@ X = (function(_super) {
             return _this.emit('window', {
               id: winId,
               width: ev.width,
-              height: ev.height
+              height: ev.height,
+              image: res
             });
           });
         };
@@ -220,7 +223,11 @@ X = (function(_super) {
     if (this.windows[data.id] == null) {
       this.CreateWindow(data);
     }
-    return win = this.windows[data.id];
+    win = this.windows[data.id];
+    console.log(this.windows);
+    return this.X.PutImage(2, win.wid, win.gc, win.width, win.height, 0, 0, 0, 24, data.image.data, function(err, lol) {
+      return console.log('PutImage', err);
+    });
   };
 
   return X;

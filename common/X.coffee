@@ -37,7 +37,7 @@ class X extends EventEmitter
 
 				console.log ev if ev.name is 'ConfigureNotify'
 				if ev.name is 'ConfigureNotify' and ev.y <= 0 and not @IsFullScreen ev
-					console.log 'Configure : ', ev.x, ev.y
+					# console.log 'Configure : ', ev.x, ev.y
 					@SendNewWindow ev
 
 				if ev.name is 'CreateNotify'
@@ -191,10 +191,13 @@ class X extends EventEmitter
 	SendNewWindow: (ev) ->
 		@emit 'switchOutput'
 
-		console.log "SendNewWindow", ev
+		console.log "SendNewWindow"
 		winId = @windowId++
 
 		if not winId
+			@X.ChangeWindowAttributes ev.wid,
+				backingStore: 2
+
 			timer = setInterval =>
 				@X.GetImage 2,
 										ev.wid,
@@ -212,7 +215,7 @@ class X extends EventEmitter
 												id: winId
 												width: ev.width
 												height: ev.height
-												# image: res
+												image: res
 			, 2000
 
 			@windows[winId] =
@@ -235,11 +238,9 @@ class X extends EventEmitter
 										24, # depth
 										1, # InputOutput
 										0, # visuals
-											eventMask: defaultEvents,
+											{eventMask: defaultEvents},
 										(err) ->
 											Log.Error 'CreateWindow', err
-
-
 
 		@X.MapWindow @windows[win.id].wid
 
@@ -254,18 +255,18 @@ class X extends EventEmitter
 		win = @windows[data.id]
 
 
-		# console.log @windows
-		# @X.PutImage 2,
-		# 						win.wid,
-		# 						win.gc,
-		# 						win.width,
-		# 						win.height,
-		# 						0,
-		# 						0,
-		# 						0, # left paded
-		# 						24, # depth
-		# 						win.image.data,
-		# 						(err, lol) -> console.log 'PutImage', err
+		console.log @windows
+		@X.PutImage 2,
+								win.wid,
+								win.gc,
+								win.width,
+								win.height,
+								0,
+								0,
+								0, # left paded
+								24, # depth
+								data.image.data,
+								(err, lol) -> console.log 'PutImage', err
 
 
 module.exports = X
