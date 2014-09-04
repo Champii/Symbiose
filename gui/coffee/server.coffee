@@ -13,7 +13,7 @@ server = null
 
 			replace: true
 
-			templateUrl: 'views/compiled/server.html'
+			templateUrl: 'views/server.html'
 
 			link: (scope, elem, attr) ->
 
@@ -38,7 +38,7 @@ server = null
 				scope.startServer = ->
 					scope.saveConfig()
 
-					Server = require '../server/compiled/Server'
+					Server = require '../server/Server'
 
 					server = new Server
 

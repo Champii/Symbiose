@@ -1,7 +1,7 @@
 exec = require('child_process').exec
 
-Server = require './server/compiled/Server'
-Client = require './client/compiled/Client'
+Server = require './server/Server'
+Client = require './client/Client'
 
 class Symbiose
 

@@ -12,16 +12,16 @@ ButtonRelease = x11.eventMask.ButtonRelease
 StructureNotify = x11.eventMask.StructureNotify
 SubstructureNotify = x11.eventMask.SubstructureNotify
 
-defaultEvents = Exposure|PointerMotion|StructureNotify|SubstructureNotify
-
 class X extends EventEmitter
 
-	constructor: (done) ->
+	constructor: ->
 		@grabed = false
 		@windowId = 0
 		@windows = []
-		@dragging = false
 
+		@defaultEventMask = Exposure|PointerMotion|StructureNotify|SubstructureNotify
+
+	Init: (done) ->
 		x11.createClient (err, display) =>
 			return Log.Error err if err?
 
@@ -31,67 +31,28 @@ class X extends EventEmitter
 			@screen = @display.screen[0]
 			@root = @screen.root
 
-			# console.log @X
+			@InitEventTree @root
 
 			@X.on 'event', (ev) =>
-
-				console.log ev if ev.name is 'ConfigureNotify'
-				if ev.name is 'ConfigureNotify' and ev.y <= 0 and not @IsFullScreen ev
-					# console.log 'Configure : ', ev.x, ev.y
-					@SendNewWindow ev
+				@emit 'event', ev if ev.wid?
 
 				if ev.name is 'CreateNotify'
 					@InitEventTree ev.parent
 
-				# if ev.name is 'DestroyNotify'
-					# console.log ev
-					# @InitEventTree ev.parent
-
-				if ev.name is 'MotionNotify'
-					# console.log ev.x, ev.y
-					@emit 'mousePos', {x: ev.rootx, y: ev.rooty}
-
-
-				if ev.name is 'ButtonPress'
-					if not @dragging and ev.keycode is 1
-						console.log 'Drag start'
-						@dragging = true
-
-					if ev.wid is @captureWid
-						console.log 'buttondown', ev.keycode
-						@emit 'buttonDown', ev.keycode
-
-				if ev.name is 'ButtonRelease'
-					if @dragging and ev.keycode is 1
-						console.log 'Drag stop'
-						@dragging = false
-
-					if ev.wid is @captureWid
-						console.log 'buttonup', ev.keycode
-						@emit 'buttonUp', ev.keycode
-
-			@X.on 'error', (e) ->
+			@X.on 'error', (e) =>
 				Log.Error e
 
 			done()
-
-	IsFullScreen: (win) ->
-		if not win.x and win.width is @screen.width and win.height > @screen.height - 50
-			return true
-		return false
 
 	InitEventTree: (root) ->
 		@X.QueryTree root, (err, tree) =>
 			return Log.Error err if err?
 
 			tree.children.forEach (wid) =>
-				@X.GetWindowAttributes wid, (err, attrs) =>
-					return Log.Error err if err?
+				@X.ChangeWindowAttributes wid,
+					eventMask: @defaultEventMask
 
-					@X.ChangeWindowAttributes wid,
-						eventMask: defaultEvents
-
-					@InitEventTree wid
+				@InitEventTree wid
 
 	CreateBlankCursor: ->
 		if not @cursorId?
@@ -105,7 +66,6 @@ class X extends EventEmitter
 
 			gc = @X.AllocID()
 			@X.CreateGC gc, cursorSourceId
-
 
 			@X.PutImage 1,
 									cursorSourceId,
@@ -153,10 +113,10 @@ class X extends EventEmitter
 			cursor: @CreateBlankCursor()
 
 		@X.MapWindow @captureWid
+		return @captureWid
 
 
 	DestroyCaptureWindow: ->
-		# @X.removeAllListeners 'event'
 		@X.DestroyWindow @captureWid
 		@captureWid = null
 
@@ -187,6 +147,16 @@ class X extends EventEmitter
 	Ungrab: ->
 		@X.UngrabPointer()
 		@grabed = false
+
+	GetWindowImage: (win, done) ->
+		@X.GetImage 2,
+								win.wid,
+								0,
+								0,
+								win.width,
+								win.height,
+								0xffffffff,
+								done
 
 	SendNewWindow: (ev) ->
 		@emit 'switchOutput'
@@ -222,30 +192,57 @@ class X extends EventEmitter
 				timer: timer
 
 	CreateWindow: (win) ->
-		console.log 'CreateWindow'
-		@windows[win.id] = win
-
-		@windows[win.id].wid = @X.AllocID()
-
-
-		@X.CreateWindow @windows[win.id].wid,
+		wid = @X.AllocID()
+		@X.CreateWindow wid,
 										@root,
-										0,
-										0,
+										win.x,
+										win.y,
 										win.width,
 										win.height,
-										0, # border width
-										24, # depth
-										1, # InputOutput
-										0, # visuals
-											{eventMask: defaultEvents},
+										win.borderWidth, # border width
+										win.depth, # depth
+										win.type, # InputOutput
+										win.visuals, # visuals
+										win.attributes,
 										(err) ->
 											Log.Error 'CreateWindow', err
 
-		@X.MapWindow @windows[win.id].wid
+		gc = @X.AllocID()
+		@X.CreateGC wid, gc
 
-		@windows[win.id].gc = @X.AllocID()
-		@X.CreateGC @windows[win.id].gc, @windows[win.id].wid
+		return [wid, gc]
+
+	MapWindow: (wid) ->
+		@X.MapWindow wid
+
+	UnmapWindow: (wid) ->
+		@X.UnmapWindow wid
+
+	# CreateWindow: (win) ->
+	# 	console.log 'CreateWindow'
+	# 	@windows[win.id] = win
+
+	# 	@windows[win.id].wid = @X.AllocID()
+
+
+	# 	@X.CreateWindow @windows[win.id].wid,
+	# 									@root,
+	# 									0,
+	# 									0,
+	# 									win.width,
+	# 									win.height,
+	# 									0, # border width
+	# 									24, # depth
+	# 									1, # InputOutput
+	# 									0, # visuals
+	# 										{eventMask: @defaultEventMask},
+	# 									(err) ->
+	# 										Log.Error 'CreateWindow', err
+
+	# 	@X.MapWindow @windows[win.id].wid
+
+	# 	@windows[win.id].gc = @X.AllocID()
+	# 	@X.CreateGC @windows[win.id].gc, @windows[win.id].wid
 
 	FillWindow: (data) ->
 		console.log 'FillWindow'
@@ -269,4 +266,4 @@ class X extends EventEmitter
 								(err, lol) -> console.log 'PutImage', err
 
 
-module.exports = X
+module.exports = new X

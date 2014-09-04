@@ -8,7 +8,7 @@ this.symbiose.directive('symClient', [
     return {
       restrict: 'E',
       replace: true,
-      templateUrl: 'views/compiled/client.html',
+      templateUrl: 'views/client.html',
       link: function(scope, elem, attr) {
         scope.config = config;
         scope.started = false;
@@ -33,7 +33,7 @@ this.symbiose.directive('symClient', [
         scope.startClient = function() {
           var Client;
           scope.saveConfig();
-          Client = require('../client/compiled/Client');
+          Client = require('../client/Client');
           client = new Client;
           scope.started = true;
           trayMenu.startButton.enabled = false;

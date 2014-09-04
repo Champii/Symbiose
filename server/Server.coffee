@@ -1,8 +1,9 @@
-bus = require '../../common/compiled/Bus'
+bus = require '../common/Bus'
 
-VirtualScreen = require './VirtualScreen'
+X = require '../common/X'
+VirtualDisplay = require '../common/VirtualDisplay'
 
-Config = require '../../gui/js/compiled/util/config'
+Config = require '../gui/js/util/config'
 
 config = new Config
 
@@ -13,30 +14,17 @@ class Server
 
 		@socket = null
 
-		@virtScreen = new VirtualScreen
+		X.Init =>
+			@virtDisplay = new VirtualDisplay
 
-		io.sockets.on 'connection', (socket) =>
-			@socket = socket
+			io.sockets.on 'connection', (socket) =>
+				@socket = socket
 
-			@virtScreen.AddScreen @socket
-
-			bus.on 'mousePos', (pos) =>
-				@Send 'mousePos', pos
-
-			bus.on 'buttonDown', (button) =>
-				@Send 'buttonDown', button
-
-			bus.on 'buttonUp', (button) =>
-				@Send 'buttonUp', button
-
-
-	Send: (action, message) ->
-		console.log 'Send', action, message
-		@socket.emit action, message
+				@virtDisplay.AddScreen @socket
 
 	Stop: ->
-		@virtScreen.Destroy()
+		@virtDisplay.Destroy()
 		@socket = null
-		@virtScreen = null
+		@virtDisplay = null
 
 module.exports = exports = Server

@@ -13,7 +13,7 @@ client = null
 
 			replace: true
 
-			templateUrl: 'views/compiled/client.html'
+			templateUrl: 'views/client.html'
 
 			link: (scope, elem, attr) ->
 
@@ -37,7 +37,7 @@ client = null
 				scope.startClient = ->
 					scope.saveConfig()
 
-					Client = require '../client/compiled/Client'
+					Client = require '../client/Client'
 
 					client = new Client
 

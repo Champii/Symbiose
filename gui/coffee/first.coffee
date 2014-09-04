@@ -9,7 +9,7 @@
 
 			replace: true
 
-			templateUrl: 'views/compiled/first.html'
+			templateUrl: 'views/first.html'
 
 			link: (scope, elem, attr) ->
 

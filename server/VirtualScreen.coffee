@@ -1,9 +1,9 @@
 _ = require 'underscore'
 
-bus = require '../../common/compiled/Bus'
-Log = require '../../common/compiled/Log'
+bus = require '../common/Bus'
+Log = require '../common/Log'
 
-X = require '../../common/compiled/X'
+X = require '../common/X'
 
 class VirtualScreen
 

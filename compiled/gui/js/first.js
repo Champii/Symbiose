@@ -4,7 +4,7 @@ this.symbiose.directive('symFirst', [
     return {
       restrict: 'E',
       replace: true,
-      templateUrl: 'views/compiled/first.html',
+      templateUrl: 'views/first.html',
       link: function(scope, elem, attr) {
         scope.config = config;
         scope.applyConfig = function(mode) {

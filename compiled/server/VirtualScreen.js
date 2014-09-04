@@ -3,11 +3,11 @@ var Log, VirtualScreen, X, bus, _;
 
 _ = require('underscore');
 
-bus = require('../../common/compiled/Bus');
+bus = require('../common/Bus');
 
-Log = require('../../common/compiled/Log');
+Log = require('../common/Log');
 
-X = require('../../common/compiled/X');
+X = require('../common/X');
 
 VirtualScreen = (function() {
   function VirtualScreen() {

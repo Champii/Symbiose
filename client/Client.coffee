@@ -1,47 +1,45 @@
 io = require('socket.io-client')
 
-Log = require '../../common/compiled/Log'
-MouseWriter = require '../../common/compiled/MouseWriter'
-
-Config = require '../../gui/js/compiled/util/config'
-
-X = require '../../common/compiled/X'
+X = require '../common/X'
+Log = require '../common/Log'
+mouse = require '../common/Mouse'
+Config = require '../gui/js/util/config'
+VirtualDisplay = require '../common/VirtualDisplay'
 
 config = new Config
 
 class Client
 
 	constructor: ->
-		Log.SetLevel 2
+		Log.SetLevel 3
+		@mouse = mouse
 
-		@X = new X =>
-			console.log 'lol'
-			@screen =
-		  	width: @X.display.screen[0].pixel_width
-		  	height: @X.display.screen[0].pixel_height
+		# @screen =
+		# 	width: @X.screen.pixel_width
+		# 	height: @X.screen.pixel_height
+		# 	name: 'client1'
 
-		  Log.Warning @screen
+		# Log.Warning @screen
 
+		X.Init =>
 			@socket = io 'http://' + config.host + ':' + config.port
 
+			@virtDisplay = new VirtualDisplay @socket
+
 			@socket.on 'askScreenInfos', =>
-				@socket.emit 'screenInfos', @screen
-
-			@mouseWrite = new MouseWriter
-
-			@socket.on 'initialCursorPos', (pos) =>
-				Log.Log 'initial pos', pos
-				@mouseWrite.MoveTo pos
+				@socket.emit 'screenInfos',
+					width: @virtDisplay.mainScreen.size.width
+					height: @virtDisplay.mainScreen.size.height
+					name: 'client1'
 
 			@socket.on 'mousePos', (pos) =>
-				Log.Log 'mouse pos', pos
-				@mouseWrite.MoveTo pos
+				@mouse.MovePointer pos
 
 			@socket.on 'buttonDown', (i) =>
-				@mouseWrite.ButtonDown i
+				@mouse.ButtonDown i
 
 			@socket.on 'buttonUp', (i) =>
-				@mouseWrite.ButtonUp i
+				@mouse.ButtonUp i
 
 			@socket.on 'window', (win) =>
 				console.log 'Window info !'

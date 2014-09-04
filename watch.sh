@@ -1,7 +1,11 @@
 #!/bin/bash
 
-jade gui/views/*.jade -w -D -o gui/views/compiled&
-coffee -w -c -b -o gui/js/compiled gui/coffee&
-coffee -w -c -b -o client/compiled client/*.coffee&
-coffee -w -c -b -o server/compiled server/*.coffee&
-coffee -w -c -b -o common/compiled common/*.coffee
+cp gui/index.html compiled/gui/
+cp -r gui/img compiled/gui/
+
+jade gui/views/*.jade -w -D -o compiled/gui/views&
+coffee -w -c -b -o compiled/gui/js gui/coffee&
+coffee -w -c -b -o compiled/client client/*.coffee&
+coffee -w -c -b -o compiled/server server/*.coffee&
+coffee -w -c -b -o compiled/common common/*.coffee&
+coffee -w -c -b -o compiled/ Symbiose.coffee

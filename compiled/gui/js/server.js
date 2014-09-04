@@ -8,7 +8,7 @@ this.symbiose.directive('symServer', [
     return {
       restrict: 'E',
       replace: true,
-      templateUrl: 'views/compiled/server.html',
+      templateUrl: 'views/server.html',
       link: function(scope, elem, attr) {
         scope.config = config;
         scope.started = false;
@@ -33,7 +33,7 @@ this.symbiose.directive('symServer', [
         scope.startServer = function() {
           var Server;
           scope.saveConfig();
-          Server = require('../server/compiled/Server');
+          Server = require('../server/Server');
           server = new Server;
           scope.started = true;
           trayMenu.startButton.enabled = false;
