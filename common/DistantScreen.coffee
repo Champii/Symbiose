@@ -64,8 +64,12 @@ class DistantScreen extends EventEmitter
 
 	AddWindow: (win) ->
 		@windows.push win
+		win.timer = setInterval =>
+			win.SendTo @socket
+		, 500
 
 	DelWindow: (win) ->
+		clearInterval win.timer
 		@windows = _(@windows).reject (item) -> item.id is win.id
 
 module.exports = DistantScreen

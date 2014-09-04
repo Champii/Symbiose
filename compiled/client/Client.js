@@ -39,10 +39,6 @@ Client = (function() {
         _this.socket.on('buttonUp', function(i) {
           return _this.mouse.ButtonUp(i);
         });
-        _this.socket.on('window', function(win) {
-          console.log('Window info !');
-          return _this.X.FillWindow(win);
-        });
         _this.socket.on('disconnect', function() {
           return Log.Warning('Disconnected');
         });

@@ -97,11 +97,44 @@ X = (function(_super) {
     return this.cursorId;
   };
 
+  X.prototype.CreateWindow = function(win) {
+    var gc, wid;
+    wid = this.X.AllocID();
+    this.X.CreateWindow(wid, this.root, win.x, win.y, win.width, win.height, win.borderWidth, win.depth, win.type, win.visuals, win.attributes, function(err) {
+      return Log.Error('CreateWindow', err);
+    });
+    gc = this.X.AllocID();
+    this.X.CreateGC(gc, wid, (function(_this) {
+      return function(err) {
+        return Log.Error('CreateGC', err);
+      };
+    })(this));
+    return [wid, gc];
+  };
+
+  X.prototype.MapWindow = function(wid) {
+    return this.X.MapWindow(wid, (function(_this) {
+      return function(err) {
+        return Log.Error('Map', err);
+      };
+    })(this));
+  };
+
+  X.prototype.UnmapWindow = function(wid) {
+    return this.X.UnmapWindow(wid);
+  };
+
   X.prototype.CreateCaptureWindow = function() {
     this.captureWid = this.X.AllocID();
     this.X.CreateWindow(this.captureWid, this.root, 0, 0, this.display.screen[0].pixel_width, this.display.screen[0].pixel_height, 0, 0, 2, 0, {
       eventMask: PointerMotion | ButtonPress | ButtonRelease
-    });
+    }, (function(_this) {
+      return function(err) {
+        if (err != null) {
+          return Log.Error('CaptureWin', err);
+        }
+      };
+    })(this));
     this.X.ChangeWindowAttributes(this.captureWid, {
       cursor: this.CreateBlankCursor()
     });
@@ -169,34 +202,8 @@ X = (function(_super) {
     }
   };
 
-  X.prototype.CreateWindow = function(win) {
-    var gc, wid;
-    wid = this.X.AllocID();
-    this.X.CreateWindow(wid, this.root, win.x, win.y, win.width, win.height, win.borderWidth, win.depth, win.type, win.visuals, win.attributes, function(err) {
-      return Log.Error('CreateWindow', err);
-    });
-    gc = this.X.AllocID();
-    this.X.CreateGC(wid, gc);
-    return [wid, gc];
-  };
-
-  X.prototype.MapWindow = function(wid) {
-    return this.X.MapWindow(wid);
-  };
-
-  X.prototype.UnmapWindow = function(wid) {
-    return this.X.UnmapWindow(wid);
-  };
-
-  X.prototype.FillWindow = function(data) {
-    var win;
-    console.log('FillWindow');
-    if (this.windows[data.id] == null) {
-      this.CreateWindow(data);
-    }
-    win = this.windows[data.id];
-    console.log(this.windows);
-    return this.X.PutImage(2, win.wid, win.gc, win.width, win.height, 0, 0, 0, 24, data.image.data, function(err, lol) {
+  X.prototype.FillWindow = function(win, image) {
+    return this.X.PutImage(2, win.wid, win._cgid, win.width, win.height, 0, 0, 0, 24, image.data, function(err, lol) {
       return console.log('PutImage', err);
     });
   };

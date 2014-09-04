@@ -43,9 +43,13 @@ class VirtualDisplay
 
 		# server
 		if not @socket?
+
+			@captureWin = 0
+
 			center =
 				x: @mainScreen.size.width / 2
 				y: @mainScreen.size.height / 2
+
 			@mouse.on 'moved', =>
 				if @switched and @mouse.pos.x isnt center.x and @mouse.pos.y isnt center.y
 					pos =
@@ -57,17 +61,40 @@ class VirtualDisplay
 					@mouse.MovePointer center
 		# client
 		else
+			@socket.on 'window', (data) =>
+				console.log 'Window info !'
+				win = _(@mainScreen.windows).find((item) => item? and item.hostId is data.hostId)
+				if not win
+					win = @mainScreen.NewWindow data
+				else
+					win.FillWindow data.image
+
 			@socket.on 'clientPosition', (position) =>
 				@clientPosition = position
 				@serverPosition = @screenPositions[position].reverse
 
+		X.on 'event', (ev) =>
+			if ev.name is 'ConfigureNotify'
+				# Prevent capture window to be added to Screen's window collection
+				if @captureWin and ev.wid is @captureWin
+					return
+
+				for k, v of @windows
+					if v? and _(v.windows).find((item) => item? and item.wid is ev.wid)?
+						return
+
+				win = _(@mainScreen.windows).find((item) => item? and item.wid is ev.wid)
+				if not win?
+					@mainScreen.NewWindow ev
+
 	EnableSwitch: (position) ->
 		@mainScreen.on 'switch' + position, (obj) =>
 
-			@_Switch position
-
 			if obj.wid?
 				@SwitchWindowTo obj, @screenPositions[position].client
+
+			@_Switch position
+
 
 	_SwitchPointers: (switched, position) ->
 		if position
@@ -120,14 +147,17 @@ class VirtualDisplay
 		@_SwitchPointers switchedSave, position
 
 		if @switched
-			X.CreateCaptureWindow()
+			@captureWin = X.CreateCaptureWindow()
 			# X.Grab()
 		else
 			# X.Ungrab()
 			X.DestroyCaptureWindow()
+			@captureWin = 0
 
 	SwitchWindowTo: (win, screen) ->
-		@mainScreen.RemoveWindow win
+		console.log 'Switch Win'
+		win.SendTo screen.socket
+		@mainScreen.DelWindow win
 		screen.AddWindow win
 
 	AddScreen: (socket) ->

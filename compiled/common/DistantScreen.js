@@ -74,10 +74,16 @@ DistantScreen = (function(_super) {
   };
 
   DistantScreen.prototype.AddWindow = function(win) {
-    return this.windows.push(win);
+    this.windows.push(win);
+    return win.timer = setInterval((function(_this) {
+      return function() {
+        return win.SendTo(_this.socket);
+      };
+    })(this), 500);
   };
 
   DistantScreen.prototype.DelWindow = function(win) {
+    clearInterval(win.timer);
     return this.windows = _(this.windows).reject(function(item) {
       return item.id === win.id;
     });

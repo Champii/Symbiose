@@ -14,13 +14,6 @@ class Client
 		Log.SetLevel 3
 		@mouse = mouse
 
-		# @screen =
-		# 	width: @X.screen.pixel_width
-		# 	height: @X.screen.pixel_height
-		# 	name: 'client1'
-
-		# Log.Warning @screen
-
 		X.Init =>
 			@socket = io 'http://' + config.host + ':' + config.port
 
@@ -40,10 +33,6 @@ class Client
 
 			@socket.on 'buttonUp', (i) =>
 				@mouse.ButtonUp i
-
-			@socket.on 'window', (win) =>
-				console.log 'Window info !'
-				@X.FillWindow win
 
 			@socket.on 'disconnect', ->
 				Log.Warning 'Disconnected'

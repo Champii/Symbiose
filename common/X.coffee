@@ -95,6 +95,33 @@ class X extends EventEmitter
 
 		return @cursorId
 
+	CreateWindow: (win) ->
+		wid = @X.AllocID()
+		@X.CreateWindow wid,
+										@root,
+										win.x,
+										win.y,
+										win.width,
+										win.height,
+										win.borderWidth, # border width
+										win.depth, # depth
+										win.type, # InputOutput
+										win.visuals, # visuals
+										win.attributes,
+										(err) ->
+											Log.Error 'CreateWindow', err
+
+		gc = @X.AllocID()
+		@X.CreateGC gc, wid, (err) => Log.Error 'CreateGC', err
+
+		return [wid, gc]
+
+	MapWindow: (wid) ->
+		@X.MapWindow wid, (err) => Log.Error 'Map', err
+
+	UnmapWindow: (wid) ->
+		@X.UnmapWindow wid
+
 	CreateCaptureWindow: ->
 		@captureWid = @X.AllocID()
 		@X.CreateWindow @captureWid,
@@ -107,7 +134,8 @@ class X extends EventEmitter
 										0,
 										2,
 										0,
-											eventMask: PointerMotion|ButtonPress|ButtonRelease
+											{eventMask: PointerMotion|ButtonPress|ButtonRelease},
+										(err) => Log.Error 'CaptureWin', err if err?
 
 		@X.ChangeWindowAttributes @captureWid,
 			cursor: @CreateBlankCursor()
@@ -191,32 +219,6 @@ class X extends EventEmitter
 			@windows[winId] =
 				timer: timer
 
-	CreateWindow: (win) ->
-		wid = @X.AllocID()
-		@X.CreateWindow wid,
-										@root,
-										win.x,
-										win.y,
-										win.width,
-										win.height,
-										win.borderWidth, # border width
-										win.depth, # depth
-										win.type, # InputOutput
-										win.visuals, # visuals
-										win.attributes,
-										(err) ->
-											Log.Error 'CreateWindow', err
-
-		gc = @X.AllocID()
-		@X.CreateGC wid, gc
-
-		return [wid, gc]
-
-	MapWindow: (wid) ->
-		@X.MapWindow wid
-
-	UnmapWindow: (wid) ->
-		@X.UnmapWindow wid
 
 	# CreateWindow: (win) ->
 	# 	console.log 'CreateWindow'
@@ -244,25 +246,19 @@ class X extends EventEmitter
 	# 	@windows[win.id].gc = @X.AllocID()
 	# 	@X.CreateGC @windows[win.id].gc, @windows[win.id].wid
 
-	FillWindow: (data) ->
-		console.log 'FillWindow'
-		if not @windows[data.id]?
-			@CreateWindow data
+	FillWindow: (win, image) ->
+		# console.log 'FillWindow', image
 
-		win = @windows[data.id]
-
-
-		console.log @windows
 		@X.PutImage 2,
 								win.wid,
-								win.gc,
+								win._cgid,
 								win.width,
 								win.height,
 								0,
 								0,
 								0, # left paded
 								24, # depth
-								data.image.data,
+								image.data,
 								(err, lol) -> console.log 'PutImage', err
 
 

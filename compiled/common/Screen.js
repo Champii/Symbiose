@@ -41,16 +41,21 @@ Screen = (function(_super) {
         return _this.HasReachedEdge(win);
       };
     })(this));
-    return this.AddWindow(win);
+    this.AddWindow(win);
+    return win;
   };
 
   Screen.prototype.AddWindow = function(win) {
-    return this.windows[win.id](win);
+    return this.windows[win.id] = win;
   };
 
   Screen.prototype.DelWindow = function(win) {
     return this.windows = _(this.windows).reject(function(item) {
-      return item.id === win.id;
+      if (item != null) {
+        return item.id === win.id;
+      } else {
+        return false;
+      }
     });
   };
 

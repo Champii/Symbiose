@@ -23,12 +23,17 @@ class Screen extends EventEmitter
 
 		win.on 'moved', => @HasReachedEdge win
 		@AddWindow win
+		win
 
 	AddWindow: (win) ->
-		@windows[win.id] win
+		@windows[win.id] = win
 
 	DelWindow: (win) ->
-		@windows = _(@windows).reject (item) -> item.id is win.id
+		@windows = _(@windows).reject (item) ->
+			if item?
+				item.id is win.id
+			else
+				false
 
 	HasReachedEdge: (pos) ->
 		if pos.x <= 0

@@ -1,3 +1,4 @@
+_ = require 'underscore'
 EventEmitter = require('events').EventEmitter
 
 X = require './X'
@@ -16,6 +17,8 @@ validAttrs =
 	attributes:
 		eventMask: X.defaultEventMask
 	visible: false
+	distant: false
+	hostId: 0
 
 nextId = 0
 
@@ -25,25 +28,32 @@ class Window extends EventEmitter
 		@id = nextId++
 		@Deserialize attrs
 
+		console.log 'NewWindow'
 		if not @wid
 			res = X.CreateWindow @
 			@wid = res[0]
 			@_cgid = res[1]
 
-			if @visible
-				@Show()
 		else
 			@GetWindowAttributes()
+
+		if @visible
+			@Show()
+
+		if @distant and attrs.image
+			@FillWindow attrs.image
+			@Show()
 
 		@Init()
 
 	Init: ->
 		eventsHandlers =
-		 ConfigureNotify: @HandleConfigure
+		 ConfigureNotify: (ev) => @HandleConfigure ev
+		 Expose: 					(ev) => @HandleExpose ev
 
 		X.on 'event', (ev) =>
-			if ev.wid is @wid
-				eventsHandlers[ev.name]() if eventsHandlers[ev.name]?
+			if ev.wid is @wid and not @distant
+				eventsHandlers[ev.name](ev) if eventsHandlers[ev.name]?
 
 	Deserialize: (attrs) ->
 		for k, v of attrs when validAttrs[k]?
@@ -53,6 +63,13 @@ class Window extends EventEmitter
 			if not @[k]?
 				@[k] = v
 
+	Serialize: ->
+		hostId: @id
+		width: @width
+		height: @height
+		distant: true
+		visible: true
+
 	GetWindowAttributes: ->
 		X.X.GetWindowAttributes @wid, (err, attrs) =>
 			return Log.Error err if err?
@@ -60,9 +77,11 @@ class Window extends EventEmitter
 			@Deserialize attrs
 
 	Show: ->
+		@visible = true
 		X.MapWindow @wid
 
 	Hide: ->
+		@visible = false
 		X.UnmapWindow @wid
 
 	HandleConfigure: (ev) ->
@@ -76,10 +95,16 @@ class Window extends EventEmitter
 			@height = ev.height
 			@emit 'resized'
 
-	SendTo: (socket) ->
-		X.GetWindowImage @wid, (err, image) =>
-			return Log.Error err if err?
+	HandleExpose: (ev) ->
+		console.log 'Expose !', @, ev
 
-			socket.emit 'window'
+	FillWindow: (image) ->
+		X.FillWindow @, image
+
+	SendTo: (socket) ->
+		X.GetWindowImage @, (err, image) =>
+			return Log.Error 'GetWindowImage', err if err?
+
+			socket.emit 'window', _(@Serialize()).extend image: image
 
 module.exports = Window

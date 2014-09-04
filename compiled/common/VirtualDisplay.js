@@ -54,6 +54,7 @@ VirtualDisplay = (function() {
       }
     };
     if (this.socket == null) {
+      this.captureWin = 0;
       center = {
         x: this.mainScreen.size.width / 2,
         y: this.mainScreen.size.height / 2
@@ -72,6 +73,20 @@ VirtualDisplay = (function() {
         };
       })(this));
     } else {
+      this.socket.on('window', (function(_this) {
+        return function(data) {
+          var win;
+          console.log('Window info !');
+          win = _(_this.mainScreen.windows).find(function(item) {
+            return (item != null) && item.hostId === data.hostId;
+          });
+          if (!win) {
+            return win = _this.mainScreen.NewWindow(data);
+          } else {
+            return win.FillWindow(data.image);
+          }
+        };
+      })(this));
       this.socket.on('clientPosition', (function(_this) {
         return function(position) {
           _this.clientPosition = position;
@@ -79,15 +94,40 @@ VirtualDisplay = (function() {
         };
       })(this));
     }
+    X.on('event', (function(_this) {
+      return function(ev) {
+        var k, v, win, _ref;
+        if (ev.name === 'ConfigureNotify') {
+          if (_this.captureWin && ev.wid === _this.captureWin) {
+            return;
+          }
+          _ref = _this.windows;
+          for (k in _ref) {
+            v = _ref[k];
+            if ((v != null) && (_(v.windows).find(function(item) {
+              return (item != null) && item.wid === ev.wid;
+            }) != null)) {
+              return;
+            }
+          }
+          win = _(_this.mainScreen.windows).find(function(item) {
+            return (item != null) && item.wid === ev.wid;
+          });
+          if (win == null) {
+            return _this.mainScreen.NewWindow(ev);
+          }
+        }
+      };
+    })(this));
   }
 
   VirtualDisplay.prototype.EnableSwitch = function(position) {
     return this.mainScreen.on('switch' + position, (function(_this) {
       return function(obj) {
-        _this._Switch(position);
         if (obj.wid != null) {
-          return _this.SwitchWindowTo(obj, _this.screenPositions[position].client);
+          _this.SwitchWindowTo(obj, _this.screenPositions[position].client);
         }
+        return _this._Switch(position);
       };
     })(this));
   };
@@ -164,14 +204,17 @@ VirtualDisplay = (function() {
     }
     this._SwitchPointers(switchedSave, position);
     if (this.switched) {
-      return X.CreateCaptureWindow();
+      return this.captureWin = X.CreateCaptureWindow();
     } else {
-      return X.DestroyCaptureWindow();
+      X.DestroyCaptureWindow();
+      return this.captureWin = 0;
     }
   };
 
   VirtualDisplay.prototype.SwitchWindowTo = function(win, screen) {
-    this.mainScreen.RemoveWindow(win);
+    console.log('Switch Win');
+    win.SendTo(screen.socket);
+    this.mainScreen.DelWindow(win);
     return screen.AddWindow(win);
   };
 
