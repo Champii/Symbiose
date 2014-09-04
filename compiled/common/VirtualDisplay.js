@@ -41,14 +41,14 @@ VirtualDisplay = (function() {
       Left: {
         reverse: 'Right',
         afterSwitchPos: {
-          x: 'clientMin',
+          x: 'clientMax',
           y: 'mouse'
         }
       },
       Right: {
         reverse: 'Left',
         afterSwitchPos: {
-          x: 'clientMax',
+          x: 'clientMin',
           y: 'mouse'
         }
       }
