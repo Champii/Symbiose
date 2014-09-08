@@ -109,7 +109,8 @@ DistantScreen = (function(_super) {
     })(this));
     win.GetOffPixmap();
     win.ActivateDamage(this.socket);
-    return win.SendTo(this.socket);
+    win.SendTo(this.socket);
+    return win.Hide();
   };
 
   DistantScreen.prototype.DelWindow = function(win) {

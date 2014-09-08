@@ -85,11 +85,7 @@ class DistantScreen extends EventEmitter
 
     win.SendTo @socket
 
-    # win.Hide()
-
-    # win.timer = setInterval =>
-    #   win.SendTo @socket
-    # , 500
+    win.Hide()
 
   DelWindow: (win) ->
     clearInterval win.timer
