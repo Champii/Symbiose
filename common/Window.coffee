@@ -5,106 +5,155 @@ X = require './X'
 Log = require './Log'
 
 validAttrs =
-	wid: 0
-	x: 0
-	y: 0
-	width: 100
-	height: 100
-	borderWidth: 1
-	depth: 0
-	type: 1
-	visuals: 0
-	attributes:
-		eventMask: X.defaultEventMask
-	visible: false
-	distant: false
-	hostId: 0
+  wid: 0
+  x: 0
+  y: 0
+  width: 100
+  height: 100
+  borderWidth: 1
+  depth: 0
+  type: 1
+  visuals: 0
+  attributes:
+    eventMask: X.defaultEventMask
+  visible: false
+  distant: false
+  hostId: 0
 
 nextId = 0
 
 class Window extends EventEmitter
 
-	constructor: (attrs) ->
-		@id = nextId++
-		@Deserialize attrs
+  constructor: (attrs) ->
+    @id = nextId++
+    @Deserialize attrs
 
-		console.log 'NewWindow'
-		if not @wid
-			res = X.CreateWindow @
-			@wid = res[0]
-			@_cgid = res[1]
+    console.log 'NewWindow'
+    if not @wid
+      res = X.CreateWindow @
+      @wid = res[0]
+      @_cgid = res[1]
 
-		else
-			@GetWindowAttributes()
+    # else
+    #   @GetWindowAttributes()
 
-		if @visible
-			@Show()
+    if @visible
+      @Show()
 
-		if @distant and attrs.image
-			@FillWindow attrs.image
-			@Show()
+    if @distant and attrs.image
+      @FillWindow attrs.image
+      @Show()
 
-		@Init()
+    @Init()
 
-	Init: ->
-		eventsHandlers =
-		 ConfigureNotify: (ev) => @HandleConfigure ev
-		 Expose: 					(ev) => @HandleExpose ev
+  Init: ->
+    eventsHandlers =
+     ConfigureNotify: (ev) => @HandleConfigure ev
+     Expose:          (ev) => @HandleExpose ev
+     MapNotify:       (ev) => @HandleMap ev
+     DamageNotify:    (ev) => @HandleDamage ev
 
-		X.on 'event', (ev) =>
-			if ev.wid is @wid and not @distant
-				eventsHandlers[ev.name](ev) if eventsHandlers[ev.name]?
+    X.on 'event', (ev) =>
+      if (ev.wid is @wid and not @distant) or not ev.wid?
+        eventsHandlers[ev.name](ev) if eventsHandlers[ev.name]?
 
-	Deserialize: (attrs) ->
-		for k, v of attrs when validAttrs[k]?
-			@[k] = v
 
-		for k, v of validAttrs
-			if not @[k]?
-				@[k] = v
+  Deserialize: (attrs) ->
+    for k, v of attrs when validAttrs[k]?
+      @[k] = v
 
-	Serialize: ->
-		hostId: @id
-		width: @width
-		height: @height
-		distant: true
-		visible: true
+    for k, v of validAttrs
+      if not @[k]?
+        @[k] = v
 
-	GetWindowAttributes: ->
-		X.X.GetWindowAttributes @wid, (err, attrs) =>
-			return Log.Error err if err?
+  Serialize: ->
+    hostId: if @hostId then @hostId else @id
+    width: @width
+    height: @height
+    distant: true
+    visible: true
 
-			@Deserialize attrs
+  GetWindowAttributes: ->
+    X.X.GetWindowAttributes @wid, (err, attrs) =>
+      return Log.Error err if err?
 
-	Show: ->
-		@visible = true
-		X.MapWindow @wid
+      console.log 'Deserialize: ', attrs
+      @Deserialize attrs
 
-	Hide: ->
-		@visible = false
-		X.UnmapWindow @wid
+  Show: ->
+    @visible = true
+    X.MapWindow @wid
 
-	HandleConfigure: (ev) ->
-		if ev.x isnt @x or ev.y isnt @y
-			@x = ev.x
-			@y = ev.y
-			@emit 'moved'
+  Hide: ->
+    @visible = false
+    X.UnmapWindow @wid
 
-		if ev.width isnt @width or ev.height isnt @height
-			@width = ev.width
-			@height = ev.height
-			@emit 'resized'
+  Move: (pos) ->
+    X.X.ConfigureWindow @wid, pos
 
-	HandleExpose: (ev) ->
-		console.log 'Expose !', @, ev
+  Resize: (size) ->
+    X.X.ConfigureWindow @wid, size
 
-	FillWindow: (image) ->
-		X.FillWindow @, image
+  HandleConfigure: (ev) ->
+    if ev.x isnt @x or ev.y isnt @y
+      @x = ev.x
+      @y = ev.y
+      @emit 'moved'
 
-	SendTo: (socket) ->
-		X.GetWindowImage @, (err, image) =>
-			return Log.Error 'GetWindowImage', err if err?
+    if ev.width isnt @width or ev.height isnt @height
+      @width = ev.width
+      @height = ev.height
+      @emit 'resized'
 
-			socket.emit 'window', _(@Serialize()).extend image: image
+  HandleExpose: (ev) ->
+    # console.log 'Expose !', @, ev
+
+  HandleMap: (ev) ->
+    X.X.FreePixmap @offPixmap
+    @GetOffPixmap()
+
+  HandleDamage: (ev) ->
+    console.log 'DAMAGE: ', ev
+    @SendTo ev.area, @socket if @socket?
+
+  FillWindow: (image) ->
+    console.log image
+    X.FillWindow @, image
+
+  SendTo: (region, socket) ->
+    if not socket?
+      socket = region
+      region =
+        x: 0
+        y: 0
+        w: @width
+        h: @height
+
+    thus = @
+    pixmap = _(thus).extend
+      wid: @offPixmap
+
+    X.GetWindowImage pixmap, region, (err, image) =>
+      return Log.Error 'GetWindowImage', err if err?
+
+      socket.emit 'windowContent', _(@Serialize()).extend
+        image: image
+        region: region
+
+  ActivateDamage: (@socket) ->
+
+    @damageId = X.X.AllocID()
+
+    console.log @damageId
+    X.damage.Create @damageId, @offPixmap, X.damage.ReportLevel.RawRectangles
+
+
+  GetOffPixmap: ->
+    console.log 'GetOffPixmap'
+
+    @offPixmap = X.X.AllocID()
+
+    X.composite.NameWindowPixmap @wid, @offPixmap, (err) => Log.Error 'Composite: NameWindowPixmap', err if err?
+
 
 module.exports = Window

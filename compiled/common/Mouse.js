@@ -27,7 +27,13 @@ Mouse = (function(_super) {
             y: ev.rooty
           };
           _this.emit('moved');
-          return _this.HasReachedEdge();
+          _this.HasReachedEdge();
+        }
+        if (ev.name === 'ButtonPress') {
+          _this.emit('buttonDown', ev.keycode);
+        }
+        if (ev.name === 'ButtonRelease') {
+          return _this.emit('buttonUp', ev.keycode);
         }
       };
     })(this));
@@ -47,13 +53,13 @@ Mouse = (function(_super) {
   };
 
   Mouse.prototype.HasReachedEdge = function() {
-    if (this.pos.x <= 0) {
+    if (this.pos.x <= 1) {
       return this.emit('switchLeft', this.pos);
-    } else if (this.pos.y <= 0) {
+    } else if (this.pos.y <= 1) {
       return this.emit('switchTop', this.pos);
-    } else if (this.pos.x >= X.screen.pixel_width) {
+    } else if (this.pos.x >= X.screen.pixel_width - 1) {
       return this.emit('switchRight', this.pos);
-    } else if (this.pos.y >= X.screen.pixel_height) {
+    } else if (this.pos.y >= X.screen.pixel_height - 1) {
       return this.emit('switchBottom', this.pos);
     }
   };

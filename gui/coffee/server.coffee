@@ -1,60 +1,60 @@
 server = null
 
 @symbiose.directive 'symServer', [
-	'$rootScope'
-	'config'
-	'trayMenu'
-	'windowMenuService'
-	($rootScope, config, trayMenu, windowMenuService) ->
+  '$rootScope'
+  'config'
+  'trayMenu'
+  'windowMenuService'
+  ($rootScope, config, trayMenu, windowMenuService) ->
 
-		return {
+    return {
 
-			restrict: 'E'
+      restrict: 'E'
 
-			replace: true
+      replace: true
 
-			templateUrl: 'views/server.html'
+      templateUrl: 'views/server.html'
 
-			link: (scope, elem, attr) ->
+      link: (scope, elem, attr) ->
 
-				scope.config = config
-				scope.started = false
+        scope.config = config
+        scope.started = false
 
-				$rootScope.$on 'config_reset', (e, config) ->
-					scope.$apply ->
-						scope.config = config
+        $rootScope.$on 'config_reset', (e, config) ->
+          scope.$apply ->
+            scope.config = config
 
-				$rootScope.$on 'start', ->
-					scope.$apply ->
-						scope.startServer()
-				$rootScope.$on 'stop', ->
-					scope.$apply ->
-						scope.stopServer()
+        $rootScope.$on 'start', ->
+          scope.$apply ->
+            scope.startServer()
+        $rootScope.$on 'stop', ->
+          scope.$apply ->
+            scope.stopServer()
 
 
-				scope.saveConfig = ->
-					config.Write()
+        scope.saveConfig = ->
+          config.Write()
 
-				scope.startServer = ->
-					scope.saveConfig()
+        scope.startServer = ->
+          scope.saveConfig()
 
-					Server = require '../server/Server'
+          Server = require '../server/Server'
 
-					server = new Server
+          server = new Server
 
-					scope.started = true
-					trayMenu.startButton.enabled = false
-					trayMenu.stopButton.enabled = true
+          scope.started = true
+          trayMenu.startButton.enabled = false
+          trayMenu.stopButton.enabled = true
 
-				scope.stopServer = ->
-					server.Stop()
+        scope.stopServer = ->
+          server.Stop()
 
-					server = null
+          server = null
 
-					scope.started = false
-					trayMenu.startButton.enabled = true
-					trayMenu.stopButton.enabled = false
+          scope.started = false
+          trayMenu.startButton.enabled = true
+          trayMenu.stopButton.enabled = false
 
-		}
+    }
 ]
 

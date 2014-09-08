@@ -2,6 +2,6 @@ EventEmitter = require('events').EventEmitter
 
 class Bus extends EventEmitter
 
-	constructor: ->
+  constructor: ->
 
 module.exports = new Bus

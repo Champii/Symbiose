@@ -1,27 +1,27 @@
 @symbiose.directive 'symFirst', [
-	'$rootScope'
-	'config'
-	($rootScope, config) ->
+  '$rootScope'
+  'config'
+  ($rootScope, config) ->
 
-		return {
+    return {
 
-			restrict: 'E'
+      restrict: 'E'
 
-			replace: true
+      replace: true
 
-			templateUrl: 'views/first.html'
+      templateUrl: 'views/first.html'
 
-			link: (scope, elem, attr) ->
+      link: (scope, elem, attr) ->
 
-				scope.config = config
+        scope.config = config
 
-				scope.applyConfig = (mode) ->
-					config.Write()
+        scope.applyConfig = (mode) ->
+          config.Write()
 
-				$rootScope.$on 'config_reset', (e, config) ->
-					scope.$apply ->
-						scope.config = config
+        $rootScope.$on 'config_reset', (e, config) ->
+          scope.$apply ->
+            scope.config = config
 
-		}
+    }
 ]
 

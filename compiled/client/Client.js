@@ -34,9 +34,11 @@ Client = (function() {
           return _this.mouse.MovePointer(pos);
         });
         _this.socket.on('buttonDown', function(i) {
+          console.log('ButtonDown');
           return _this.mouse.ButtonDown(i);
         });
         _this.socket.on('buttonUp', function(i) {
+          console.log('ButtonUp');
           return _this.mouse.ButtonUp(i);
         });
         _this.socket.on('disconnect', function() {

@@ -59,14 +59,26 @@ Screen = (function(_super) {
     });
   };
 
+  Screen.prototype.HasWindow = function(win) {
+    if (_(this.windows).find((function(_this) {
+      return function(item) {
+        return (item != null) && item.wid === win.wid;
+      };
+    })(this)) != null) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   Screen.prototype.HasReachedEdge = function(pos) {
-    if (pos.x <= 0) {
+    if (pos.x <= 1) {
       return this.emit('switchLeft', pos);
-    } else if (pos.y <= 0) {
+    } else if (pos.y <= 1) {
       return this.emit('switchTop', pos);
-    } else if (pos.x >= this.size.width - 1) {
+    } else if (pos.x >= this.size.width - 2) {
       return this.emit('switchRight', pos);
-    } else if (pos.y >= this.size.height - 1) {
+    } else if (pos.y >= this.size.height - 2) {
       return this.emit('switchBottom', pos);
     }
   };

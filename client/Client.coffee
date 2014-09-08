@@ -10,38 +10,40 @@ config = new Config
 
 class Client
 
-	constructor: ->
-		Log.SetLevel 3
-		@mouse = mouse
+  constructor: ->
+    Log.SetLevel 3
+    @mouse = mouse
 
-		X.Init =>
-			@socket = io 'http://' + config.host + ':' + config.port
+    X.Init =>
+      @socket = io 'http://' + config.host + ':' + config.port
 
-			@virtDisplay = new VirtualDisplay @socket
+      @virtDisplay = new VirtualDisplay @socket
 
-			@socket.on 'askScreenInfos', =>
-				@socket.emit 'screenInfos',
-					width: @virtDisplay.mainScreen.size.width
-					height: @virtDisplay.mainScreen.size.height
-					name: 'client1'
+      @socket.on 'askScreenInfos', =>
+        @socket.emit 'screenInfos',
+          width: @virtDisplay.mainScreen.size.width
+          height: @virtDisplay.mainScreen.size.height
+          name: 'client1'
 
-			@socket.on 'mousePos', (pos) =>
-				@mouse.MovePointer pos
+      @socket.on 'mousePos', (pos) =>
+        @mouse.MovePointer pos
 
-			@socket.on 'buttonDown', (i) =>
-				@mouse.ButtonDown i
+      @socket.on 'buttonDown', (i) =>
+        console.log 'ButtonDown'
+        @mouse.ButtonDown i
 
-			@socket.on 'buttonUp', (i) =>
-				@mouse.ButtonUp i
+      @socket.on 'buttonUp', (i) =>
+        console.log 'ButtonUp'
+        @mouse.ButtonUp i
 
-			@socket.on 'disconnect', ->
-				Log.Warning 'Disconnected'
+      @socket.on 'disconnect', ->
+        Log.Warning 'Disconnected'
 
-			@socket.on 'error', (err) ->
-				Log.Error err
+      @socket.on 'error', (err) ->
+        Log.Error err
 
-	Stop: ->
-		@socket = null
+  Stop: ->
+    @socket = null
 
 
 module.exports = exports = Client

@@ -22,7 +22,7 @@ VirtualDisplay = (function() {
     this.switched = false;
     this.mouse = mouse;
     this.mainScreen = new Screen;
-    this.screenPositions = {
+    this.screenPlacement = {
       Top: {
         reverse: 'Bottom',
         expectedClient: 'client1',
@@ -72,119 +72,126 @@ VirtualDisplay = (function() {
           }
         };
       })(this));
-    } else {
-      this.socket.on('window', (function(_this) {
-        return function(data) {
-          var win;
-          console.log('Window info !');
-          win = _(_this.mainScreen.windows).find(function(item) {
-            return (item != null) && item.hostId === data.hostId;
-          });
-          if (!win) {
-            return win = _this.mainScreen.NewWindow(data);
-          } else {
-            return win.FillWindow(data.image);
+      this.mouse.on('buttonDown', (function(_this) {
+        return function(k) {
+          if (_this.switched) {
+            return _this.switched.socket.emit('buttonDown', k);
           }
         };
       })(this));
-      this.socket.on('clientPosition', (function(_this) {
-        return function(position) {
-          _this.clientPosition = position;
-          return _this.serverPosition = _this.screenPositions[position].reverse;
+      this.mouse.on('buttonUp', (function(_this) {
+        return function(k) {
+          if (_this.switched) {
+            return _this.switched.socket.emit('buttonUp', k);
+          }
+        };
+      })(this));
+    } else {
+      this.socket.on('newWindow', (function(_this) {
+        return function(data) {
+          var win;
+          win = _(_this.mainScreen.windows).find(function(item) {
+            return (item != null) && item.hostId === data.hostId;
+          });
+          if (win == null) {
+            console.log('New window !', data);
+            return win = _this.mainScreen.NewWindow(data);
+          }
+        };
+      })(this));
+      this.socket.on('windowContent', (function(_this) {
+        return function(data) {
+          var win;
+          console.log('Window content');
+          win = _(_this.mainScreen.windows).find(function(item) {
+            return (item != null) && item.hostId === data.hostId;
+          });
+          return win.FillWindow(data);
+        };
+      })(this));
+      this.socket.on('clientPlacement', (function(_this) {
+        return function(placement) {
+          _this.clientPlacement = placement;
+          return _this.serverPlacement = _this.screenPlacement[placement].reverse;
         };
       })(this));
     }
     X.on('event', (function(_this) {
       return function(ev) {
-        var k, v, win, _ref;
+        var k, v, _ref;
         if (ev.name === 'ConfigureNotify') {
           if (_this.captureWin && ev.wid === _this.captureWin) {
             return;
           }
-          _ref = _this.windows;
+          if (_this.mainScreen.HasWindow(ev)) {
+            return;
+          }
+          _ref = _this.screenPlacement;
           for (k in _ref) {
             v = _ref[k];
-            if ((v != null) && (_(v.windows).find(function(item) {
-              return (item != null) && item.wid === ev.wid;
-            }) != null)) {
+            if ((v.client != null) && v.client.HasWindow(ev)) {
               return;
             }
           }
-          win = _(_this.mainScreen.windows).find(function(item) {
-            return (item != null) && item.wid === ev.wid;
-          });
-          if (win == null) {
-            return _this.mainScreen.NewWindow(ev);
-          }
+          return _this.mainScreen.NewWindow(ev);
         }
       };
     })(this));
   }
 
-  VirtualDisplay.prototype.EnableSwitch = function(position) {
-    return this.mainScreen.on('switch' + position, (function(_this) {
+  VirtualDisplay.prototype.EnableSwitch = function(placement) {
+    return this.mainScreen.on('switch' + placement, (function(_this) {
       return function(obj) {
-        if (obj.wid != null) {
-          _this.SwitchWindowTo(obj, _this.screenPositions[position].client);
+        if ((obj.wid != null) && _this.mainScreen.HasWindow(obj)) {
+          obj.Move({
+            x: 100,
+            y: 100
+          });
+          _this.SwitchWindowTo(obj, _this.screenPlacement[placement].client);
         }
-        return _this._Switch(position);
+        return _this._Switch(placement);
       };
     })(this));
   };
 
-  VirtualDisplay.prototype._SwitchPointers = function(switched, position) {
+  VirtualDisplay.prototype._AfterSwitchPos = function(placement, mouse) {
     var pos;
-    if (position) {
-      pos = {
-        x: this.screenPositions[position].afterSwitchPos.x,
-        y: this.screenPositions[position].afterSwitchPos.y
-      };
-      if (pos.x === 'mouse') {
-        pos.x = this.mouse.pos.x;
-      }
-      if (pos.y === 'mouse') {
-        pos.y = this.mouse.pos.y;
-      }
-      if (pos.x === 'clientMax') {
-        pos.x = this.screenPositions[position].client.size.width - 2;
-      }
-      if (pos.y === 'clientMax') {
-        pos.y = this.screenPositions[position].client.size.height - 2;
-      }
-      if (pos.x === 'clientMin') {
-        pos.x = 2;
-      }
-      if (pos.y === 'clientMin') {
-        pos.y = 2;
-      }
-      this.screenPositions[position].client.MovePointer(pos);
+    pos = {
+      x: this.screenPlacement[placement].afterSwitchPos.x,
+      y: this.screenPlacement[placement].afterSwitchPos.y
+    };
+    if (pos.x === 'mouse') {
+      pos.x = mouse.pos.x;
+    }
+    if (pos.y === 'mouse') {
+      pos.y = mouse.pos.y;
+    }
+    if (pos.x === 'clientMax') {
+      pos.x = this.screenPlacement[placement].client.size.width - 2;
+    }
+    if (pos.y === 'clientMax') {
+      pos.y = this.screenPlacement[placement].client.size.height - 2;
+    }
+    if (pos.x === 'clientMin') {
+      pos.x = 2;
+    }
+    if (pos.y === 'clientMin') {
+      pos.y = 2;
+    }
+    return pos;
+  };
+
+  VirtualDisplay.prototype._SwitchPointers = function(switched, placement) {
+    var pos;
+    if (placement) {
+      pos = this._AfterSwitchPos(placement, this.mouse);
+      this.screenPlacement[placement].client.MovePointer(pos);
       return this.mouse.MovePointer({
         x: this.mainScreen.size.width / 2,
         y: this.mainScreen.size.height / 2
       });
     } else {
-      pos = {
-        x: this.screenPositions[this.screenPositions[switched.screenPosition].reverse].afterSwitchPos.x,
-        y: this.screenPositions[this.screenPositions[switched.screenPosition].reverse].afterSwitchPos.y
-      };
-      if (pos.x === 'mouse') {
-        pos.x = switched.pos.x;
-      }
-      if (pos.y === 'mouse') {
-        pos.y = switched.pos.y;
-      }
-      if (pos.x === 'clientMax') {
-        pos.x = this.mainScreen.size.width - 2;
-      }
-      if (pos.y === 'clientMax') {
-        pos.y = this.mainScreen.size.height - 2;
-      }
-      if (pos.x === 'clientMin') {
-        pos.x = 2;
-      }
-      if (pos.y === 'clientMin') {
-        pos.y = 2;
-      }
+      pos = this._AfterSwitchPos(this.screenPlacement[switched.placement].reverse, switched);
       return _.defer((function(_this) {
         return function() {
           return _this.mouse.MovePointer(pos);
@@ -193,16 +200,20 @@ VirtualDisplay = (function() {
     }
   };
 
-  VirtualDisplay.prototype._Switch = function(position) {
+  VirtualDisplay.prototype._Switch = function(placement) {
     var switchedSave;
-    console.log('Switch', position);
+    console.log('Switch', placement);
     switchedSave = this.switched;
-    if (this.switched || (position == null)) {
+    if (this.switched && (placement != null)) {
+      console.log('Already Switched.');
+      return;
+    }
+    if (this.switched || (placement == null)) {
       this.switched = false;
     } else {
-      this.switched = this.screenPositions[position].client;
+      this.switched = this.screenPlacement[placement].client;
     }
-    this._SwitchPointers(switchedSave, position);
+    this._SwitchPointers(switchedSave, placement);
     if (this.switched) {
       return this.captureWin = X.CreateCaptureWindow();
     } else {
@@ -212,8 +223,19 @@ VirtualDisplay = (function() {
   };
 
   VirtualDisplay.prototype.SwitchWindowTo = function(win, screen) {
+    var pos;
     console.log('Switch Win');
-    win.SendTo(screen.socket);
+    pos = this._AfterSwitchPos(screen.placement, {
+      pos: {
+        x: win.x,
+        y: win.y
+      }
+    });
+    pos = {
+      x: 100,
+      y: 100
+    };
+    screen.socket.emit('newWindow', _(win.Serialize()).extend(pos));
     this.mainScreen.DelWindow(win);
     return screen.AddWindow(win);
   };
@@ -222,13 +244,13 @@ VirtualDisplay = (function() {
     socket.once('screenInfos', (function(_this) {
       return function(infos) {
         var k, v, _ref;
-        _ref = _this.screenPositions;
+        _ref = _this.screenPlacement;
         for (k in _ref) {
           v = _ref[k];
           if (v.expectedClient === infos.name) {
-            infos.position = k;
-            _this.screenPositions[k].client = new DistantScreen(infos, socket);
-            _this.screenPositions[k].client.on('switch', function() {
+            infos.placement = k;
+            _this.screenPlacement[k].client = new DistantScreen(infos, socket);
+            _this.screenPlacement[k].client.on('switch', function() {
               return _this._Switch();
             });
             _this.EnableSwitch(k);

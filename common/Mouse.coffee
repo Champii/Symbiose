@@ -6,49 +6,55 @@ Log = require '../common/Log'
 
 class Mouse extends EventEmitter
 
-	constructor: ->
-		@pos =
-			x: 0
-			y: 0
+  constructor: ->
+    @pos =
+      x: 0
+      y: 0
 
-		X.on 'event', (ev) =>
-			if ev.name is 'MotionNotify'
-				@pos =
-					x: ev.rootx
-					y: ev.rooty
+    X.on 'event', (ev) =>
+      if ev.name is 'MotionNotify'
+        @pos =
+          x: ev.rootx
+          y: ev.rooty
 
-				@emit 'moved'
+        @emit 'moved'
 
-				@HasReachedEdge()
+        @HasReachedEdge()
 
-	MovePointer: (pos) ->
-		@pos = pos
-		X.MovePointer @pos
+      if ev.name is 'ButtonPress'
+        @emit 'buttonDown', ev.keycode
 
-	MovePointerRelative: (delta) ->
-		@pos =
-			x: @pos.x + delta.x
-			y: @pos.y + delta.y
-		X.MovePointer @pos
+      if ev.name is 'ButtonRelease'
+        @emit 'buttonUp', ev.keycode
 
-	HasReachedEdge: ->
-		if @pos.x <= 0
-			@emit 'switchLeft', @pos
-		else if @pos.y <= 0
-			@emit 'switchTop', @pos
-		else if @pos.x >= X.screen.pixel_width
-			@emit 'switchRight', @pos
-		else if @pos.y >= X.screen.pixel_height
-			@emit 'switchBottom', @pos
+  MovePointer: (pos) ->
+    @pos = pos
+    X.MovePointer @pos
 
-	# TEMPORARY, will use XTest to simulate click
-	_Xte: (order, args) ->
-		exec "xte -x :0.0 '" + order + " " + args + "'"
+  MovePointerRelative: (delta) ->
+    @pos =
+      x: @pos.x + delta.x
+      y: @pos.y + delta.y
+    X.MovePointer @pos
 
-	ButtonDown: (button) ->
-		@_Xte 'mousedown', button
+  HasReachedEdge: ->
+    if @pos.x <= 1
+      @emit 'switchLeft', @pos
+    else if @pos.y <= 1
+      @emit 'switchTop', @pos
+    else if @pos.x >= X.screen.pixel_width - 1
+      @emit 'switchRight', @pos
+    else if @pos.y >= X.screen.pixel_height - 1
+      @emit 'switchBottom', @pos
 
-	ButtonUp: (button) ->
-		@_Xte 'mouseup', button
+  # TEMPORARY, will use XTest to simulate click
+  _Xte: (order, args) ->
+    exec "xte -x :0.0 '" + order + " " + args + "'"
+
+  ButtonDown: (button) ->
+    @_Xte 'mousedown', button
+
+  ButtonUp: (button) ->
+    @_Xte 'mouseup', button
 
 module.exports = new Mouse

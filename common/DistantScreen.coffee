@@ -1,3 +1,4 @@
+_ = require 'underscore'
 EventEmitter = require('events').EventEmitter
 
 X = require './X'
@@ -7,69 +8,91 @@ Window = require './Window'
 
 class DistantScreen extends EventEmitter
 
-	constructor: (infos, @socket) ->
-		@windows = []
-		@size =
-			width: infos.width
-			height: infos.height
-		@name = infos.name
-		@screenPosition = infos.position
-		@pos =
-			x: 0
-			y: 0
+  constructor: (infos, @socket) ->
+    @windows = []
+    @size =
+      width: infos.width
+      height: infos.height
+    @name = infos.name
+    @placement = infos.placement
+    @pos =
+      x: 0
+      y: 0
 
-		@socket.emit 'clientPosition', @screenPosition
+    @socket.emit 'clientPosition', @placement
 
-	MovePointer: (pos) ->
-		@pos = pos
+  MovePointer: (pos) ->
+    @pos = pos
 
-		@_ContentPointer()
+    @_ContentPointer()
 
-		@socket.emit 'mousePos', @pos
+    @socket.emit 'mousePos', @pos
 
-	MovePointerRelative: (delta) ->
-		@pos.x = @pos.x + delta.x
-		@pos.y = @pos.y + delta.y
+  MovePointerRelative: (delta) ->
+    @pos.x = @pos.x + delta.x
+    @pos.y = @pos.y + delta.y
 
-		@_ContentPointer()
+    @_ContentPointer()
 
-		@socket.emit 'mousePos', @pos
-		@HasReachedEdge()
+    @socket.emit 'mousePos', @pos
+    @HasReachedEdge()
 
-	_ContentPointer: ->
-		if @pos.x < 0
-			@pos.x = 0
+  _ContentPointer: ->
+    if @pos.x < 0
+      @pos.x = 0
 
-		if @pos.x >= @size.width
-			@pos.x = @size.width
+    if @pos.x >= @size.width
+      @pos.x = @size.width
 
-		if @pos.y < 0
-			@pos.y = 0
+    if @pos.y < 0
+      @pos.y = 0
 
-		if @pos.y >= @size.height
-			@pos.y = @size.height
+    if @pos.y >= @size.height
+      @pos.y = @size.height
 
-	HasReachedEdge: ->
-		if @pos.x <= 0 and @screenPosition is 'Right'
-			@emit 'switch'
+  HasReachedEdge: ->
+    if @pos.x <= 1 and @placement is 'Right'
+      @emit 'switch'
 
-		else if @pos.y <= 0 and @screenPosition is 'Bottom'
-			@emit 'switch'
+    else if @pos.y <= 1 and @placement is 'Bottom'
+      @emit 'switch'
 
-		else if @pos.x >= @size.width and @screenPosition is 'Left'
-			@emit 'switch'
+    else if @pos.x >= @size.width - 2 and @placement is 'Left'
+      @emit 'switch'
 
-		else if @pos.y >= @size.height and @screenPosition is 'Top'
-			@emit 'switch'
+    else if @pos.y >= @size.height - 2 and @placement is 'Top'
+      @emit 'switch'
 
-	AddWindow: (win) ->
-		@windows.push win
-		win.timer = setInterval =>
-			win.SendTo @socket
-		, 500
+  GetWindow: (wid) ->
+    _(@windows).find((item) => item? and item.wid is wid)
 
-	DelWindow: (win) ->
-		clearInterval win.timer
-		@windows = _(@windows).reject (item) -> item.id is win.id
+  HasWindow: (win) ->
+    if _(@windows).find((item) => item? and item.wid is win.wid)?
+      true
+    else
+      false
+
+  AddWindow: (win) ->
+    if @HasWindow win
+      return
+
+    @windows.push win
+
+    X.composite.RedirectSubwindows win.wid, X.composite.Redirect.Automatic, (err) => Log.Error 'Composite: RedirectWindow', err if err?
+
+    win.GetOffPixmap()
+    win.ActivateDamage @socket
+
+    win.SendTo @socket
+
+    # win.Hide()
+
+    # win.timer = setInterval =>
+    #   win.SendTo @socket
+    # , 500
+
+  DelWindow: (win) ->
+    clearInterval win.timer
+    @windows = _(@windows).reject (item) -> item.id is win.id
 
 module.exports = DistantScreen

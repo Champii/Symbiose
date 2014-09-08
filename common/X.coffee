@@ -1,3 +1,4 @@
+_ = require 'underscore'
 x11 = require 'x11'
 EventEmitter = require('events').EventEmitter
 
@@ -14,252 +15,217 @@ SubstructureNotify = x11.eventMask.SubstructureNotify
 
 class X extends EventEmitter
 
-	constructor: ->
-		@grabed = false
-		@windowId = 0
-		@windows = []
+  constructor: ->
+    @grabed = false
+    @windowId = 0
+    @windows = []
 
-		@defaultEventMask = Exposure|PointerMotion|StructureNotify|SubstructureNotify
+    @defaultEventMask = Exposure|PointerMotion|StructureNotify|SubstructureNotify
 
-	Init: (done) ->
-		x11.createClient (err, display) =>
-			return Log.Error err if err?
+  Init: (done) ->
+    x11.createClient (err, display) =>
+      return Log.Error err if err?
 
-			@display = display
+      @display = display
 
-			@X = @display.client
-			@screen = @display.screen[0]
-			@root = @screen.root
+      @X = @display.client
+      @screen = @display.screen[0]
+      @root = @screen.root
 
-			@InitEventTree @root
+      @InitEventTree @root
 
-			@X.on 'event', (ev) =>
-				@emit 'event', ev if ev.wid?
+      @X.on 'event', (ev) =>
+        @emit 'event', ev
 
-				if ev.name is 'CreateNotify'
-					@InitEventTree ev.parent
+        if ev.name is 'CreateNotify'
+          @InitEventTree ev.parent
 
-			@X.on 'error', (e) =>
-				Log.Error e
+      @X.on 'error', (e) =>
+        Log.Error 'Main error: ', e
 
-			done()
+      @X.require 'composite', (err, comp) =>
+        return console.error err if err?
 
-	InitEventTree: (root) ->
-		@X.QueryTree root, (err, tree) =>
-			return Log.Error err if err?
+        @composite = comp
 
-			tree.children.forEach (wid) =>
-				@X.ChangeWindowAttributes wid,
-					eventMask: @defaultEventMask
+      @X.require 'damage', (err, damage) =>
+        return console.error err if err?
 
-				@InitEventTree wid
+        @damage = damage
 
-	CreateBlankCursor: ->
-		if not @cursorId?
-			cursorSourceId = @X.AllocID()
+        # @composite.GetOverlayWindow @root, (err, wid) =>
+        #   console.log 'GetOverlayWindow', err, wid
 
-			@X.CreatePixmap cursorSourceId,
-											@captureWid,
-											1,
-											1,
-											1
+      done()
 
-			gc = @X.AllocID()
-			@X.CreateGC gc, cursorSourceId
+  InitEventTree: (root) ->
+    @X.QueryTree root, (err, tree) =>
+      return Log.Error err if err?
 
-			@X.PutImage 1,
-									cursorSourceId,
-									gc,
-									1,
-									1,
-									0,
-									0,
-									0,
-									1,
-									0
+      tree.children.forEach (wid) =>
+        @X.ChangeWindowAttributes wid,
+          eventMask: @defaultEventMask
+        , (err) => console.error 'Error InitEventTree: ', wid, err
 
-			color =
-				R: 0
-				G: 0
-				B: 0
+        @InitEventTree wid
 
-			@cursorId = @X.AllocID()
+  CreateBlankCursor: ->
+    if not @cursorId?
+      cursorSourceId = @X.AllocID()
 
-			@X.CreateCursor @cursorId,
-											cursorSourceId,
-											0,
-											color,
-											color,
-											0,
-											0
+      @X.CreatePixmap cursorSourceId,
+                      @captureWid,
+                      1,
+                      1,
+                      1
 
-		return @cursorId
+      gc = @X.AllocID()
+      @X.CreateGC gc, cursorSourceId
 
-	CreateWindow: (win) ->
-		wid = @X.AllocID()
-		@X.CreateWindow wid,
-										@root,
-										win.x,
-										win.y,
-										win.width,
-										win.height,
-										win.borderWidth, # border width
-										win.depth, # depth
-										win.type, # InputOutput
-										win.visuals, # visuals
-										win.attributes,
-										(err) ->
-											Log.Error 'CreateWindow', err
+      @X.PutImage 1,
+                  cursorSourceId,
+                  gc,
+                  1,
+                  1,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0
 
-		gc = @X.AllocID()
-		@X.CreateGC gc, wid, (err) => Log.Error 'CreateGC', err
+      color =
+        R: 0
+        G: 0
+        B: 0
 
-		return [wid, gc]
+      @cursorId = @X.AllocID()
 
-	MapWindow: (wid) ->
-		@X.MapWindow wid, (err) => Log.Error 'Map', err
+      @X.CreateCursor @cursorId,
+                      cursorSourceId,
+                      0,
+                      color,
+                      color,
+                      0,
+                      0
 
-	UnmapWindow: (wid) ->
-		@X.UnmapWindow wid
+    return @cursorId
 
-	CreateCaptureWindow: ->
-		@captureWid = @X.AllocID()
-		@X.CreateWindow @captureWid,
-										@root,
-										0,
-										0,
-										@display.screen[0].pixel_width,
-										@display.screen[0].pixel_height,
-										0,
-										0,
-										2,
-										0,
-											{eventMask: PointerMotion|ButtonPress|ButtonRelease},
-										(err) => Log.Error 'CaptureWin', err if err?
+  CreateWindow: (win) ->
+    wid = @X.AllocID()
+    console.log 'CreateWindow', win
+    @X.CreateWindow wid,
+                    @root,
+                    win.x,
+                    win.y,
+                    win.width,
+                    win.height,
+                    win.borderWidth, # border width
+                    win.depth, # depth
+                    win.type, # InputOutput
+                    win.visuals, # visuals
+                    win.attributes,
+                    (err) ->
+                      Log.Error 'CreateWindow', err
 
-		@X.ChangeWindowAttributes @captureWid,
-			cursor: @CreateBlankCursor()
+    gc = @X.AllocID()
+    @X.CreateGC gc, wid, (err) => Log.Error 'CreateGC', err
 
-		@X.MapWindow @captureWid
-		return @captureWid
+    return [wid, gc]
 
+  MapWindow: (wid) ->
+    @X.MapWindow wid, (err) => Log.Error 'Map', err
 
-	DestroyCaptureWindow: ->
-		@X.DestroyWindow @captureWid
-		@captureWid = null
+  UnmapWindow: (wid) ->
+    @X.UnmapWindow wid
 
-	MovePointer: (pos) ->
-		target = @root
-		# if @grabed
-		# 	target = @captureWid
+  CreateCaptureWindow: ->
+    @captureWid = @X.AllocID()
+    @X.CreateWindow @captureWid,
+                    @root,
+                    0,
+                    0,
+                    @display.screen[0].pixel_width,
+                    @display.screen[0].pixel_height,
+                    0,
+                    0,
+                    1,
+                    0,
+                      {eventMask: PointerMotion|ButtonPress|ButtonRelease},
+                    (err) => Log.Error 'CaptureWin', err if err?
 
-		@X.WarpPointer 	0,
-										target,
-										0,
-										0,
-										0,
-										0,
-										pos.x,
-										pos.y
+    @X.ChangeWindowAttributes @captureWid,
+      cursor: @CreateBlankCursor()
 
-	Grab: ->
-		@X.GrabPointer 	@captureWid,
-										false,
-										{eventMask: PointerMotion|ButtonPress},
-										undefined,
-										undefined,
-										@captureWid,
-										(err, data) -> console.log 'Grab', err, data
-		@grabed = true
-
-	Ungrab: ->
-		@X.UngrabPointer()
-		@grabed = false
-
-	GetWindowImage: (win, done) ->
-		@X.GetImage 2,
-								win.wid,
-								0,
-								0,
-								win.width,
-								win.height,
-								0xffffffff,
-								done
-
-	SendNewWindow: (ev) ->
-		@emit 'switchOutput'
-
-		console.log "SendNewWindow"
-		winId = @windowId++
-
-		if not winId
-			@X.ChangeWindowAttributes ev.wid,
-				backingStore: 2
-
-			timer = setInterval =>
-				@X.GetImage 2,
-										ev.wid,
-										0,
-										0,
-										ev.width,
-										ev.height,
-										0xffffffff,
-										(err, res) =>
-											return Log.Error err if err?
-
-											console.log 'GetImage', res
-
-											@emit 'window',
-												id: winId
-												width: ev.width
-												height: ev.height
-												image: res
-			, 2000
-
-			@windows[winId] =
-				timer: timer
+    @X.MapWindow @captureWid
+    return @captureWid
 
 
-	# CreateWindow: (win) ->
-	# 	console.log 'CreateWindow'
-	# 	@windows[win.id] = win
+  DestroyCaptureWindow: ->
+    @X.DestroyWindow @captureWid
+    @captureWid = null
 
-	# 	@windows[win.id].wid = @X.AllocID()
+  MovePointer: (pos) ->
+    target = @root
+    # if @grabed
+    #   target = @captureWid
 
+    @X.WarpPointer  0,
+                    target,
+                    0,
+                    0,
+                    0,
+                    0,
+                    pos.x,
+                    pos.y
 
-	# 	@X.CreateWindow @windows[win.id].wid,
-	# 									@root,
-	# 									0,
-	# 									0,
-	# 									win.width,
-	# 									win.height,
-	# 									0, # border width
-	# 									24, # depth
-	# 									1, # InputOutput
-	# 									0, # visuals
-	# 										{eventMask: @defaultEventMask},
-	# 									(err) ->
-	# 										Log.Error 'CreateWindow', err
+  Grab: ->
+    @X.GrabPointer  @captureWid,
+                    false,
+                    {eventMask: PointerMotion|ButtonPress},
+                    undefined,
+                    undefined,
+                    @captureWid,
+                    (err, data) -> console.log 'Grab', err, data
+    @grabed = true
 
-	# 	@X.MapWindow @windows[win.id].wid
+  Ungrab: ->
+    @X.UngrabPointer()
+    @grabed = false
 
-	# 	@windows[win.id].gc = @X.AllocID()
-	# 	@X.CreateGC @windows[win.id].gc, @windows[win.id].wid
+  GetWindowImage: (win, region, done) ->
+    if not done? and region?
+      done = region
 
-	FillWindow: (win, image) ->
-		# console.log 'FillWindow', image
+    if not region?
+      region =
+        x: 0
+        y: 0
+        w: win.width
+        h: win.height
 
-		@X.PutImage 2,
-								win.wid,
-								win._cgid,
-								win.width,
-								win.height,
-								0,
-								0,
-								0, # left paded
-								24, # depth
-								image.data,
-								(err, lol) -> console.log 'PutImage', err
+    @X.GetImage 2,
+                win.wid,
+                region.x,
+                region.y,
+                region.w,
+                region.h,
+                0xffffffff,
+                done
+
+  FillWindow: (win, image) ->
+    # console.log 'FillWindow', image
+
+    @X.PutImage 2,
+                win.wid,
+                win._cgid,
+                image.region.w,
+                image.region.h,
+                image.region.x,
+                image.region.y,
+                0, # left paded
+                24, # depth
+                image.image.data,
+                (err, lol) -> console.log 'PutImage', err
 
 
 module.exports = new X

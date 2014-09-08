@@ -9,22 +9,22 @@ config = new Config
 
 class Server
 
-	constructor: ->
-		io = require('socket.io')(config.port)
+  constructor: ->
+    io = require('socket.io')(config.port)
 
-		@socket = null
+    @socket = null
 
-		X.Init =>
-			@virtDisplay = new VirtualDisplay
+    X.Init =>
+      @virtDisplay = new VirtualDisplay
 
-			io.sockets.on 'connection', (socket) =>
-				@socket = socket
+      io.sockets.on 'connection', (socket) =>
+        @socket = socket
 
-				@virtDisplay.AddScreen @socket
+        @virtDisplay.AddScreen @socket
 
-	Stop: ->
-		@virtDisplay.Destroy()
-		@socket = null
-		@virtDisplay = null
+  Stop: ->
+    @virtDisplay.Destroy()
+    @socket = null
+    @virtDisplay = null
 
 module.exports = exports = Server

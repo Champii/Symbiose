@@ -5,22 +5,22 @@ Client = require './client/Client'
 
 class Symbiose
 
-	constructor: ->
+  constructor: ->
 
-	Run: ->
-		exec '../nodewebkit/nw .'
+  Run: ->
+    exec '../nodewebkit/nw .'
 
-	RunServerCli: ->
-	  @server = new Server
+  RunServerCli: ->
+    @server = new Server
 
-	RunClientCli: ->
-	  @client = new Client
+  RunClientCli: ->
+    @client = new Client
 
 app = new Symbiose
 
 if process.argv[2] is '-q' and process.argv[3] is '-s'
-	app.RunServerCli()
+  app.RunServerCli()
 else if process.argv[2] is '-q' and process.argv[3] is '-c'
-	app.RunClientCli()
+  app.RunClientCli()
 else
-	app.Run()
+  app.Run()
