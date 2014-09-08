@@ -38,7 +38,6 @@ Window = (function(_super) {
     var res;
     this.id = nextId++;
     this.Deserialize(attrs);
-    console.log('NewWindow');
     if (!this.wid) {
       res = X.CreateWindow(this);
       this.wid = res[0];
@@ -119,18 +118,6 @@ Window = (function(_super) {
     };
   };
 
-  Window.prototype.GetWindowAttributes = function() {
-    return X.X.GetWindowAttributes(this.wid, (function(_this) {
-      return function(err, attrs) {
-        if (err != null) {
-          return Log.Error(err);
-        }
-        console.log('Deserialize: ', attrs);
-        return _this.Deserialize(attrs);
-      };
-    })(this));
-  };
-
   Window.prototype.Show = function() {
     this.visible = true;
     return X.MapWindow(this.wid);
@@ -170,14 +157,12 @@ Window = (function(_super) {
   };
 
   Window.prototype.HandleDamage = function(ev) {
-    console.log('DAMAGE: ', ev);
     if (this.socket != null) {
       return this.SendTo(ev.area, this.socket);
     }
   };
 
   Window.prototype.FillWindow = function(image) {
-    console.log(image);
     return X.FillWindow(this, image);
   };
 
@@ -212,12 +197,14 @@ Window = (function(_super) {
   Window.prototype.ActivateDamage = function(socket) {
     this.socket = socket;
     this.damageId = X.X.AllocID();
-    console.log(this.damageId);
     return X.damage.Create(this.damageId, this.offPixmap, X.damage.ReportLevel.RawRectangles);
   };
 
+  Window.prototype.DesactivateDamage = function() {
+    return X.damage.Destroy(this.damageId);
+  };
+
   Window.prototype.GetOffPixmap = function() {
-    console.log('GetOffPixmap');
     this.offPixmap = X.X.AllocID();
     return X.composite.NameWindowPixmap(this.wid, this.offPixmap, (function(_this) {
       return function(err) {
@@ -226,6 +213,10 @@ Window = (function(_super) {
         }
       };
     })(this));
+  };
+
+  Window.prototype.Destroy = function() {
+    return X.X.DestroyWindow(this.wid);
   };
 
   return Window;

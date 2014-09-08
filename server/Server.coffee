@@ -1,7 +1,7 @@
 bus = require '../common/Bus'
 
 X = require '../common/X'
-VirtualDisplay = require '../common/VirtualDisplay'
+VirtualDisplayServer = require './VirtualDisplayServer'
 
 Config = require '../gui/js/util/config'
 
@@ -15,7 +15,7 @@ class Server
     @socket = null
 
     X.Init =>
-      @virtDisplay = new VirtualDisplay
+      @virtDisplay = new VirtualDisplayServer
 
       io.sockets.on 'connection', (socket) =>
         @socket = socket

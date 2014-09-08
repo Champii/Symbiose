@@ -47,14 +47,10 @@ class Mouse extends EventEmitter
     else if @pos.y >= X.screen.pixel_height - 1
       @emit 'switchBottom', @pos
 
-  # TEMPORARY, will use XTest to simulate click
-  _Xte: (order, args) ->
-    exec "xte -x :0.0 '" + order + " " + args + "'"
-
   ButtonDown: (button) ->
-    @_Xte 'mousedown', button
+    X.ButtonDown button
 
   ButtonUp: (button) ->
-    @_Xte 'mouseup', button
+    X.ButtonUp button
 
 module.exports = new Mouse

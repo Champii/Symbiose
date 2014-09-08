@@ -1,55 +1,54 @@
 _ = require 'underscore'
 EventEmitter = require('events').EventEmitter
 
-X = require './X'
 Log = require './Log'
-mouse = require '../common/Mouse'
 Window = require './Window'
 
 class Screen extends EventEmitter
 
-  # Socket is set only for clients
-  constructor: (@socket) ->
+  constructor: ->
     @windows = {}
-    @size =
-      width: X.screen.pixel_width
-      height: X.screen.pixel_height
-    @mouse = mouse
-
-    @mouse.on 'moved', => @HasReachedEdge @mouse.pos
 
   NewWindow: (blob) ->
     win = new Window blob
 
-    win.on 'moved', => @HasReachedEdge win
     @AddWindow win
     win
 
   AddWindow: (win) ->
+    if @HasWindow win
+      return
+
     @windows[win.id] = win
 
   DelWindow: (win) ->
     @windows = _(@windows).reject (item) ->
       if item?
-        item.id is win.id
+        item.wid is win.wid
       else
         false
 
-  HasWindow: (win) ->
-    if _(@windows).find((item) => item? and item.wid is win.wid)?
-      true
-    else
-      false
+  GetWindow: (wid) ->
+    _(@windows).find((item) => item? and item.wid is wid)
 
-  HasReachedEdge: (pos) ->
-    if pos.x <= 1
-      @emit 'switchLeft', pos
-    else if pos.y <= 1
-      @emit 'switchTop', pos
-    else if pos.x >= @size.width - 2
-      @emit 'switchRight', pos
-    else if pos.y >= @size.height - 2
-      @emit 'switchBottom', pos
+  HasWindow: (win) ->
+    @GetWindow(win.wid)?
+
+  HasReachedEdge: (obj) ->
+
+    if obj.x <= 1
+      return 'Left'
+      # @emit 'switchLeft', obj
+    else if obj.y <= 1
+      return 'Top'
+      # @emit 'switchTop', obj
+    else if obj.x >= @size.width - 2
+      return 'Right'
+      # @emit 'switchRight', obj
+    else if obj.y >= @size.height - 2
+      return 'Bottom'
+      # @emit 'switchBottom', obj
+    return
 
   IsFullScreen: (win) ->
     if not win.x and win.width is @size.width and win.height > @size.height - 100

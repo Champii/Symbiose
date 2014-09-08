@@ -7,7 +7,6 @@ Symbiose is an app to share mouse, keyboard, and windows between different OS
 ### Linux
 
 ```bash
-sudo apt-get install xautomation # apt-get on debian-like, use your own
 git clone git@github.com:Champii/Symbiose.git
 cd Symbiose
 npm install
@@ -15,6 +14,8 @@ npm install -g coffee-script
 npm install -g jade
 ./compile.sh
 ./common/nodewebkit/nw .
+ # or for no interface
+node compiled -q [-s|-c]
 ```
 
 ### Windows
@@ -36,10 +37,8 @@ Not working yet
 
 By order of priority:
 
-* Catch keyboard events
-* Drag n Drop window between screens
-* Live update of windows
-* Hide source window when dragged out of screen
 * Catch guest windows inputs
-* Multi client
-* Choose where to place clients screens
+* Optimisation of mouse tracking and events in general
+* Slick Drag n Drop window between screens
+* Repair glitch on window refresh
+* Hide source window when dragged out of screen

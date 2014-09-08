@@ -3,23 +3,26 @@ EventEmitter = require('events').EventEmitter
 
 X = require './X'
 Log = require './Log'
-mouse = require '../common/Mouse'
 Window = require './Window'
+Screen = require './Screen'
 
-class DistantScreen extends EventEmitter
+class DistantScreen extends Screen
 
   constructor: (infos, @socket) ->
-    @windows = []
+    super()
+
     @size =
       width: infos.width
       height: infos.height
+
     @name = infos.name
+
     @placement = infos.placement
+    @placementReverse = infos.placementReverse
+
     @pos =
       x: 0
       y: 0
-
-    @socket.emit 'clientPosition', @placement
 
   MovePointer: (pos) ->
     @pos = pos
@@ -51,32 +54,15 @@ class DistantScreen extends EventEmitter
       @pos.y = @size.height
 
   HasReachedEdge: ->
-    if @pos.x <= 1 and @placement is 'Right'
-      @emit 'switch'
+    edge = super @.pos
 
-    else if @pos.y <= 1 and @placement is 'Bottom'
-      @emit 'switch'
-
-    else if @pos.x >= @size.width - 2 and @placement is 'Left'
-      @emit 'switch'
-
-    else if @pos.y >= @size.height - 2 and @placement is 'Top'
-      @emit 'switch'
-
-  GetWindow: (wid) ->
-    _(@windows).find((item) => item? and item.wid is wid)
-
-  HasWindow: (win) ->
-    if _(@windows).find((item) => item? and item.wid is win.wid)?
-      true
-    else
-      false
+    @emit 'switch' if edge is @placementReverse
 
   AddWindow: (win) ->
     if @HasWindow win
       return
 
-    @windows.push win
+    super win
 
     X.composite.RedirectSubwindows win.wid, X.composite.Redirect.Automatic, (err) => Log.Error 'Composite: RedirectWindow', err if err?
 
@@ -88,7 +74,17 @@ class DistantScreen extends EventEmitter
     win.Hide()
 
   DelWindow: (win) ->
-    clearInterval win.timer
-    @windows = _(@windows).reject (item) -> item.id is win.id
+    win = @GetWindow win
+
+    win.DesactivateDamage()
+
+    X.composite.RedirectSubwindows win.wid, (err) => Log.Error 'Composite: UnredirectWindows', err if err?
+
+    win.Show()
+
+    super win
+
+    win
+
 
 module.exports = DistantScreen

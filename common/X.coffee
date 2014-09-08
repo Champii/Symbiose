@@ -12,6 +12,8 @@ ButtonPress = x11.eventMask.ButtonPress
 ButtonRelease = x11.eventMask.ButtonRelease
 StructureNotify = x11.eventMask.StructureNotify
 SubstructureNotify = x11.eventMask.SubstructureNotify
+KeyPress = x11.eventMask.KeyPress
+KeyRelease = x11.eventMask.KeyRelease
 
 class X extends EventEmitter
 
@@ -52,6 +54,11 @@ class X extends EventEmitter
         return console.error err if err?
 
         @damage = damage
+
+      @X.require 'xtest', (err, xTest) =>
+        return console.error err if err?
+
+        @xTest = xTest
 
         # @composite.GetOverlayWindow @root, (err, wid) =>
         #   console.log 'GetOverlayWindow', err, wid
@@ -148,9 +155,9 @@ class X extends EventEmitter
                     @display.screen[0].pixel_height,
                     0,
                     0,
-                    1,
+                    2,
                     0,
-                      {eventMask: PointerMotion|ButtonPress|ButtonRelease},
+                      {eventMask: PointerMotion|ButtonPress|ButtonRelease|KeyPress|KeyRelease},
                     (err) => Log.Error 'CaptureWin', err if err?
 
     @X.ChangeWindowAttributes @captureWid,
@@ -227,5 +234,19 @@ class X extends EventEmitter
                 image.image.data,
                 (err, lol) -> console.log 'PutImage', err
 
+
+  KeyDown: (k) ->
+    @xTest.FakeInput @xTest.KeyPress, k, 0, 0, 0, 0
+
+  KeyUp: (k) ->
+    @xTest.FakeInput @xTest.KeyRelease, k, 0, 0, 0, 0
+
+  ButtonDown: (b) ->
+    console.log 'ButtonDown', b
+    @xTest.FakeInput @xTest.ButtonPress, b, 0, 0, 0, 0
+
+  ButtonUp: (b) ->
+    console.log 'ButtonUp', b
+    @xTest.FakeInput @xTest.ButtonRelease, b, 0, 0, 0, 0
 
 module.exports = new X

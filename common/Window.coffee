@@ -28,7 +28,7 @@ class Window extends EventEmitter
     @id = nextId++
     @Deserialize attrs
 
-    console.log 'NewWindow'
+    # console.log 'NewWindow'
     if not @wid
       res = X.CreateWindow @
       @wid = res[0]
@@ -73,12 +73,12 @@ class Window extends EventEmitter
     distant: true
     visible: true
 
-  GetWindowAttributes: ->
-    X.X.GetWindowAttributes @wid, (err, attrs) =>
-      return Log.Error err if err?
+  # GetWindowAttributes: ->
+  #   X.X.GetWindowAttributes @wid, (err, attrs) =>
+  #     return Log.Error err if err?
 
-      console.log 'Deserialize: ', attrs
-      @Deserialize attrs
+  #     console.log 'Deserialize: ', attrs
+  #     @Deserialize attrs
 
   Show: ->
     @visible = true
@@ -113,11 +113,9 @@ class Window extends EventEmitter
     @GetOffPixmap()
 
   HandleDamage: (ev) ->
-    console.log 'DAMAGE: ', ev
     @SendTo ev.area, @socket if @socket?
 
   FillWindow: (image) ->
-    console.log image
     X.FillWindow @, image
 
   SendTo: (region, socket) ->
@@ -144,16 +142,19 @@ class Window extends EventEmitter
 
     @damageId = X.X.AllocID()
 
-    console.log @damageId
     X.damage.Create @damageId, @offPixmap, X.damage.ReportLevel.RawRectangles
 
+  DesactivateDamage: ->
+    X.damage.Destroy @damageId
 
   GetOffPixmap: ->
-    console.log 'GetOffPixmap'
+    # console.log 'GetOffPixmap'
 
     @offPixmap = X.X.AllocID()
 
     X.composite.NameWindowPixmap @wid, @offPixmap, (err) => Log.Error 'Composite: NameWindowPixmap', err if err?
 
+  Destroy: ->
+    X.X.DestroyWindow @wid
 
 module.exports = Window

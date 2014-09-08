@@ -64,16 +64,12 @@ Mouse = (function(_super) {
     }
   };
 
-  Mouse.prototype._Xte = function(order, args) {
-    return exec("xte -x :0.0 '" + order + " " + args + "'");
-  };
-
   Mouse.prototype.ButtonDown = function(button) {
-    return this._Xte('mousedown', button);
+    return X.ButtonDown(button);
   };
 
   Mouse.prototype.ButtonUp = function(button) {
-    return this._Xte('mouseup', button);
+    return X.ButtonUp(button);
   };
 
   return Mouse;
